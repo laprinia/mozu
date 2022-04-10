@@ -28,6 +28,7 @@ SampleWindow::SampleWindow(unsigned int width, unsigned int height, const std::s
 	glEnable(GL_MULTISAMPLE);
 	glEnable(GL_DEPTH_TEST);
 
+	SampleWindow::AddShaders();
 	SampleWindow::Init();
 	while (!glfwWindowShouldClose(window))
 	{
@@ -40,7 +41,24 @@ SampleWindow::SampleWindow(unsigned int width, unsigned int height, const std::s
 
 void SampleWindow::Init()
 {
-	//init data
+	GLuint VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	GLuint VBO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	float data[] = {
+		-1.0f, -1.0f,
+		-1.0f, 1.0f,
+		1.0f, -1.0f,
+		1.0f, 1.0f
+	};
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, data, GL_STATIC_DRAW);
+	const GLint posPtr = glGetAttribLocation(shaders["base"], "position");
+	std::cout << "Position for pos in shader: " << posPtr << std::endl;
+	glVertexAttribPointer(posPtr, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(posPtr);
 }
 
 void SampleWindow::Update()
@@ -49,8 +67,16 @@ void SampleWindow::Update()
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glViewport(0, 0, width, height);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glUseProgram(shaders["base"]);
+
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glfwSwapBuffers(window);
 
+}
+
+void SampleWindow::AddShaders()
+{
+	shaders["base"] = ShaderManager::AddShader("Base");
 }
 
 int SampleWindow::GetWindowHeight()
