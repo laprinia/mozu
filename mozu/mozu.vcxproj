@@ -151,11 +151,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\camera\Camera.cpp" />
+    <ClCompile Include="src\input\InputManager.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\shaders\ShaderManager.cpp" />
     <ClCompile Include="src\window\SampleWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\camera\Camera.h" />
+    <ClInclude Include="src\input\InputManager.h" />
     <ClInclude Include="src\shaders\ShaderManager.h" />
     <ClInclude Include="src\window\SampleWindow.h" />
   </ItemGroup>
