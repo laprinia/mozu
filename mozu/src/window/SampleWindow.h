@@ -12,6 +12,7 @@
 #include "../shaders/ShaderManager.h"
 #include "../input/InputManager.h"
 #include "../camera/Camera.h"
+#include "../renderables/SimpleMesh.h"
 
 
 class SampleWindow
@@ -21,6 +22,7 @@ private:
 	unsigned int width, height;
 	std::unordered_map<std::string, GLuint> shaders;
 	static Camera* camera;
+	SimpleMesh* quadMesh;
 	static bool firstMouseMove;
 	static double lastMouseX, lastMouseY;
 	static double yaw, pitch;
@@ -28,6 +30,9 @@ private:
 	static float cameraSpeed;
 	static float deltaTime;
 	static float lastFrame;
+	unsigned int* fbID;
+	unsigned int* bufferTexture;
+	bool hasCameraMoved = false;
 	void Init();
 	void Update();
 	void AddShaders();

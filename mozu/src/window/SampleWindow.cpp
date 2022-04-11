@@ -45,6 +45,7 @@ SampleWindow::SampleWindow(unsigned int width, unsigned int height, const std::s
 
 	SampleWindow::AddShaders();
 	SampleWindow::Init();
+
 	while (!glfwWindowShouldClose(window))
 	{
 		SampleWindow::Update();
@@ -76,11 +77,39 @@ void SampleWindow::Init()
 	glEnableVertexAttribArray(posPtr);
 
 	camera = new Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+	std::vector<SVertex> screenQuadVertices = {
+
+			SVertex{glm::vec3(-1.0f,-1.0f,0.0f),glm::vec2(0.0f,0.0f)},
+			SVertex{glm::vec3(-1.0f,1.0f,0.0f),glm::vec2(0.0f,1.0f)},
+			SVertex{glm::vec3(1.0f,1.0f,0.0f),glm::vec2(1.0f,1.0f)},
+			SVertex{glm::vec3(1.0f,-1.0f,0.0f),glm::vec2(1.0f,0.0f)}
+	};
+
+	std::vector<GLuint> screenQuadIndices = { 0, 1, 2,
+		0, 2, 3 };
+	quadMesh = new SimpleMesh(screenQuadVertices, screenQuadIndices);
+
+	unsigned int fb;
+	glGenFramebuffers(1, &fb);
+	glBindFramebuffer(GL_FRAMEBUFFER, fb);
+	fbID = &fb;
+
+	unsigned int bt;
+	glGenTextures(1, &bt);
+	glBindTexture(GL_TEXTURE_2D, bt);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bt, 0);
+	bufferTexture = &bt;
+
 }
 
 void SampleWindow::Update()
 {
 	glfwPollEvents();
+	OnInputUpdate();
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glViewport(0, 0, width, height);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -159,22 +188,28 @@ void SampleWindow::OnScrollChange(GLFWwindow* window, double xOffset, double yOf
 }
 
 void SampleWindow::OnInputUpdate() {
+
 	float currentTime = glfwGetTime();
 	deltaTime = currentTime - lastFrame;
 	lastFrame = currentTime;
 	float actualSpeed = cameraSpeed * deltaTime;
+	bool isCameraMovement = false;
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+		isCameraMovement = true;
 		camera->setCameraPosition(camera->getCameraPosition() + (actualSpeed * camera->getCameraFront()));
 	}
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+		isCameraMovement = true;
 		camera->setCameraPosition(camera->getCameraPosition() - (actualSpeed * camera->getCameraFront()));
 	}
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+		isCameraMovement = true;
 		camera->setCameraPosition(camera->getCameraPosition() - (actualSpeed * (glm::normalize(
 			glm::cross(camera->getCameraFront(), camera->getCameraUp())))));
 	}
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+		isCameraMovement = true;
 		camera->setCameraPosition(camera->getCameraPosition() + (actualSpeed * (glm::normalize(
 			glm::cross(camera->getCameraFront(), camera->getCameraUp())))));
 	}
@@ -184,6 +219,8 @@ void SampleWindow::OnInputUpdate() {
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
 		camera->setCameraPosition(camera->getCameraPosition() - (actualSpeed * camera->getCameraUp()));
 	}
+
+	isCameraMovement ? hasCameraMoved = true : hasCameraMoved = false;
 
 }
 
