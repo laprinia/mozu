@@ -33,8 +33,11 @@ private:
 	unsigned int* fbID;
 	unsigned int* bufferTexture;
 	bool hasCameraMoved = false;
+	int frameNumber = 0;
 	void Init();
 	void Update();
+	void PathTrace();
+	void RenderPathResult();
 	void AddShaders();
 
 public:

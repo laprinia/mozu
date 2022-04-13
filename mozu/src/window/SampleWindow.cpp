@@ -72,7 +72,6 @@ void SampleWindow::Init()
 	};
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, data, GL_STATIC_DRAW);
 	const GLint posPtr = glGetAttribLocation(shaders["base"], "position");
-	std::cout << "Position for pos in shader: " << posPtr << std::endl;
 	glVertexAttribPointer(posPtr, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(posPtr);
 
@@ -103,6 +102,14 @@ void SampleWindow::Init()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bt, 0);
 	bufferTexture = &bt;
+	unsigned int rbo;
+	glGenRenderbuffers(1, &rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << " Framebuffer isn't complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 }
 
@@ -110,11 +117,8 @@ void SampleWindow::Update()
 {
 	glfwPollEvents();
 	OnInputUpdate();
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-	glViewport(0, 0, width, height);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glUseProgram(shaders["base"]);
+
 	//MVP
 	glm::mat4 view = glm::mat4(1.0f);
 	view = glm::lookAt(camera->getCameraPosition(), camera->getCameraPosition() + camera->getCameraFront(),
@@ -124,14 +128,39 @@ void SampleWindow::Update()
 
 	glm::mat4 model = glm::mat4(1.0f);
 
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	SampleWindow::PathTrace();
+	SampleWindow::RenderPathResult();
 	glfwSwapBuffers(window);
 
+}
+
+void SampleWindow::PathTrace() {
+	if (hasCameraMoved) frameNumber = 0;
+
+	frameNumber++;
+	glBindFramebuffer(GL_FRAMEBUFFER, *fbID);
+	glViewport(0, 0, width, height);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glUseProgram(shaders["base"]);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
+void SampleWindow::RenderPathResult() {
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glViewport(0, 0, width, height);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_TEXTURE_2D);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, *bufferTexture);
+	glUseProgram(shaders["post"]);
+	quadMesh->Draw();
 }
 
 void SampleWindow::AddShaders()
 {
 	shaders["base"] = ShaderManager::AddShader("Base");
+	shaders["post"] = ShaderManager::AddShader("Post");
 }
 
 int SampleWindow::GetWindowHeight()
