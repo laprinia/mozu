@@ -30,9 +30,6 @@
     <ClCompile Include="src\camera\Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderables\SimpleMesh.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\window\SampleWindow.h">
@@ -47,14 +44,12 @@
     <ClInclude Include="src\camera\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderables\SimpleMesh.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shaders\BaseFS.glsl" />
     <None Include="src\shaders\BaseVS.glsl" />
     <None Include="src\shaders\PostFS.glsl" />
     <None Include="src\shaders\PostVS.glsl" />
+    <None Include="src\shaders\TraceCS.glsl" />
   </ItemGroup>
 </Project>

@@ -1,6 +1,9 @@
 #include "SampleWindow.h"
 
 Camera* SampleWindow::camera = nullptr;
+
+bool SampleWindow::hasCameraMoved = false;
+bool SampleWindow::hasTriggeredMovement = false;
 float SampleWindow::cameraSpeed = 20.0f;
 float SampleWindow::deltaTime = 0.0f;
 float SampleWindow::lastFrame = 0.0f;
@@ -43,7 +46,6 @@ SampleWindow::SampleWindow(unsigned int width, unsigned int height, const std::s
 	glEnable(GL_MULTISAMPLE);
 	glEnable(GL_DEPTH_TEST);
 
-	SampleWindow::AddShaders();
 	SampleWindow::Init();
 
 	while (!glfwWindowShouldClose(window))
@@ -57,60 +59,46 @@ SampleWindow::SampleWindow(unsigned int width, unsigned int height, const std::s
 
 void SampleWindow::Init()
 {
-	GLuint VAO;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	GLuint VBO;
+	camera = new Camera(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	float vertices[] = {
+		1.f,  1.f, 0.0f,  1.f,  1.f,
+		1.f, -1.f, 0.0f,  1.f,  0.f, 
+	   -1.f, -1.f, 0.0f,  0.f,  0.f, 
+	   -1.f,  1.f, 0.0f,  0.f,  1.f,
+	};
+	unsigned int indices[] = {
+		0, 1, 3,
+		1, 2, 3
+	};
+	;
+	glGenVertexArrays(1, &quadVAO);
+	glBindVertexArray(quadVAO);
+	unsigned int VBO;
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	float data[] = {
-		-1.0f, -1.0f,
-		-1.0f, 1.0f,
-		1.0f, -1.0f,
-		1.0f, 1.0f
-	};
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, data, GL_STATIC_DRAW);
-	const GLint posPtr = glGetAttribLocation(shaders["base"], "position");
-	glVertexAttribPointer(posPtr, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(posPtr);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(0));
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
-	camera = new Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	unsigned int EBO;
+	glGenBuffers(1, &EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-	std::vector<SVertex> screenQuadVertices = {
-
-			SVertex{glm::vec3(-1.0f,-1.0f,0.0f),glm::vec2(0.0f,0.0f)},
-			SVertex{glm::vec3(-1.0f,1.0f,0.0f),glm::vec2(0.0f,1.0f)},
-			SVertex{glm::vec3(1.0f,1.0f,0.0f),glm::vec2(1.0f,1.0f)},
-			SVertex{glm::vec3(1.0f,-1.0f,0.0f),glm::vec2(1.0f,0.0f)}
-	};
-
-	std::vector<GLuint> screenQuadIndices = { 0, 1, 2,
-		0, 2, 3 };
-	quadMesh = new SimpleMesh(screenQuadVertices, screenQuadIndices);
-
-	unsigned int fb;
-	glGenFramebuffers(1, &fb);
-	glBindFramebuffer(GL_FRAMEBUFFER, fb);
-	fbID = &fb;
-
-	unsigned int bt;
-	glGenTextures(1, &bt);
-	glBindTexture(GL_TEXTURE_2D, bt);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glGenTextures(1, &computeTexture);
+	glBindTexture(GL_TEXTURE_2D, computeTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bt, 0);
-	bufferTexture = &bt;
-	unsigned int rbo;
-	glGenRenderbuffers(1, &rbo);
-	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo);
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		std::cout << " Framebuffer isn't complete!" << std::endl;
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, computeTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+	glBindImageTexture(0, computeTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
+	SampleWindow::AddShaders();
 }
 
 void SampleWindow::Update()
@@ -118,18 +106,10 @@ void SampleWindow::Update()
 	glfwPollEvents();
 	OnInputUpdate();
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-	//MVP
-	glm::mat4 view = glm::mat4(1.0f);
-	view = glm::lookAt(camera->getCameraPosition(), camera->getCameraPosition() + camera->getCameraFront(),
-		camera->getCameraUp());
-	glm::mat4 projection = glm::mat4(1.0f);
-	projection = glm::perspective(glm::radians(camera->getFieldOfView()), (float)width / (float)height, 0.1f, 800.0f);
-
-	glm::mat4 model = glm::mat4(1.0f);
-
 	SampleWindow::PathTrace();
 	SampleWindow::RenderPathResult();
+	hasCameraMoved = false;
+	hasTriggeredMovement = false;
 	glfwSwapBuffers(window);
 
 }
@@ -137,30 +117,31 @@ void SampleWindow::Update()
 void SampleWindow::PathTrace() {
 	if (hasCameraMoved) frameNumber = 0;
 
-	frameNumber++;
-	glBindFramebuffer(GL_FRAMEBUFFER, *fbID);
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glViewport(0, 0, width, height);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glUseProgram(shaders["base"]);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glUseProgram(shaders["trace"]);
+	glDispatchCompute(width / 4, height / 4, 1);
+	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+	frameNumber++;
+
 }
 
 void SampleWindow::RenderPathResult() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	glViewport(0, 0, width, height);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glEnable(GL_TEXTURE_2D);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, *bufferTexture);
 	glUseProgram(shaders["post"]);
-	quadMesh->Draw();
+	glBindTexture(GL_TEXTURE_2D, computeTexture);
+	glBindVertexArray(quadVAO);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
 void SampleWindow::AddShaders()
 {
-	shaders["base"] = ShaderManager::AddShader("Base");
-	shaders["post"] = ShaderManager::AddShader("Post");
+	shaders["base"] = ShaderManager::AddBaseShader("Base");
+	shaders["post"] = ShaderManager::AddBaseShader("Post");
+	shaders["trace"] = ShaderManager::AddComputeShader("Trace");
 }
 
 int SampleWindow::GetWindowHeight()
@@ -182,6 +163,7 @@ void SampleWindow::OnKeyPress(GLFWwindow* window, int key, int scancode, int act
 
 void SampleWindow::OnCursorPositionChange(GLFWwindow* window, double xPosition, double yPosition) {
 
+	hasTriggeredMovement = true;
 	if (firstMouseMove) {
 		firstMouseMove = false;
 		lastMouseX = xPosition;
@@ -210,6 +192,7 @@ void SampleWindow::OnCursorPositionChange(GLFWwindow* window, double xPosition, 
 
 void SampleWindow::OnScrollChange(GLFWwindow* window, double xOffset, double yOffset) {
 
+	hasTriggeredMovement = true;
 	camera->setFieldOfView(camera->getFieldOfView() - yOffset);
 	float foV = camera->getFieldOfView();
 	if (foV < 1.0f) camera->setFieldOfView(1.0f);
@@ -243,13 +226,15 @@ void SampleWindow::OnInputUpdate() {
 			glm::cross(camera->getCameraFront(), camera->getCameraUp())))));
 	}
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+		isCameraMovement = true;
 		camera->setCameraPosition(camera->getCameraPosition() + (actualSpeed * camera->getCameraUp()));
 	}
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+		isCameraMovement = true;
 		camera->setCameraPosition(camera->getCameraPosition() - (actualSpeed * camera->getCameraUp()));
 	}
 
-	isCameraMovement ? hasCameraMoved = true : hasCameraMoved = false;
+	isCameraMovement || hasTriggeredMovement ? hasCameraMoved = true : hasCameraMoved = false;
 
 }
 

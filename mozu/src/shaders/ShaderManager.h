@@ -20,7 +20,9 @@ public:
 
     static ShaderManager &GetInstance();
     
-    static GLuint AddShader(const std::string& startName);
+    static GLuint AddBaseShader(const std::string& startName);
+
+    static GLuint AddComputeShader(const std::string& startName);
 
     static void CompileShader(int shaderType, const std::string &location);
 

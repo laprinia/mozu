@@ -8,11 +8,12 @@
 #include <stb_image_aug.h>
 #include <SOIL.h>
 #include "gtc/matrix_transform.hpp"
+#include <gtc/type_ptr.hpp>
+
 
 #include "../shaders/ShaderManager.h"
 #include "../input/InputManager.h"
 #include "../camera/Camera.h"
-#include "../renderables/SimpleMesh.h"
 
 
 class SampleWindow
@@ -22,7 +23,10 @@ private:
 	unsigned int width, height;
 	std::unordered_map<std::string, GLuint> shaders;
 	static Camera* camera;
-	SimpleMesh* quadMesh;
+	unsigned int computeTexture;
+	unsigned int quadVAO;
+	static bool hasCameraMoved;
+	static bool hasTriggeredMovement;
 	static bool firstMouseMove;
 	static double lastMouseX, lastMouseY;
 	static double yaw, pitch;
@@ -32,7 +36,6 @@ private:
 	static float lastFrame;
 	unsigned int* fbID;
 	unsigned int* bufferTexture;
-	bool hasCameraMoved = false;
 	int frameNumber = 0;
 	void Init();
 	void Update();

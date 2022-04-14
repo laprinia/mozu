@@ -8,7 +8,7 @@ ShaderManager& ShaderManager::GetInstance() {
 	return instance;
 }
 
-GLuint ShaderManager::AddShader(const std::string& startName)
+GLuint ShaderManager::AddBaseShader(const std::string& startName)
 {
 	std::string vertexsuff = "VS.glsl";
 	ShaderManager::CompileShader(GL_VERTEX_SHADER, ".\\..\\mozu\\src\\shaders\\" + startName + vertexsuff);
@@ -17,6 +17,17 @@ GLuint ShaderManager::AddShader(const std::string& startName)
 	std::string fragsuff = "FS.glsl";
 	ShaderManager::CompileShader(GL_FRAGMENT_SHADER, ".\\..\\mozu\\src\\shaders\\" + startName + fragsuff);
 	ShaderManager::CheckShaderCompile(GL_FRAGMENT_SHADER);
+
+	GLuint shaderProgram = ShaderManager::LinkShaderProgram();
+	ShaderManager::CheckShaderLink(shaderProgram);
+	return shaderProgram;
+}
+
+GLuint ShaderManager::AddComputeShader(const std::string& startName)
+{
+	std::string vertexsuff = "CS.glsl";
+	ShaderManager::CompileShader(GL_COMPUTE_SHADER, ".\\..\\mozu\\src\\shaders\\" + startName + vertexsuff);
+	ShaderManager::CheckShaderCompile(GL_COMPUTE_SHADER);
 
 	GLuint shaderProgram = ShaderManager::LinkShaderProgram();
 	ShaderManager::CheckShaderLink(shaderProgram);
