@@ -7,12 +7,16 @@
 #include <GLFW/glfw3.h>
 #include <stb_image_aug.h>
 #include <SOIL.h>
+#include "../imgui/imgui.h"
+#include "../imgui/imgui_impl_glfw.h"
+#include "../imgui/imgui_impl_opengl3.h"
 #include "gtc/matrix_transform.hpp"
 #include <gtc/type_ptr.hpp>
 
 
 #include "../shaders/ShaderManager.h"
 #include "../input/InputManager.h"
+#include "../gui/GUIManager.h"
 #include "../camera/Camera.h"
 
 
@@ -20,7 +24,7 @@ class SampleWindow
 {
 private:
 	GLFWwindow* window;
-	unsigned int width, height;
+	static unsigned int width, height;
 	std::unordered_map<std::string, GLuint> shaders;
 	static Camera* camera;
 	unsigned int computeTexture;
@@ -37,8 +41,11 @@ private:
 	unsigned int* fbID;
 	unsigned int* bufferTexture;
 	int frameNumber = 0;
+	static bool hasGUI;
+
 	void Init();
 	void Update();
+	void GUIUpdate();
 	void PathTrace();
 	void RenderPathResult();
 	void AddShaders();

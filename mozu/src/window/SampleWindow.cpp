@@ -1,7 +1,9 @@
 #include "SampleWindow.h"
 
+unsigned int SampleWindow::width = 0;
+unsigned int SampleWindow::height = 0;
+bool SampleWindow::hasGUI = false;
 Camera* SampleWindow::camera = nullptr;
-
 bool SampleWindow::hasCameraMoved = false;
 bool SampleWindow::hasTriggeredMovement = false;
 float SampleWindow::cameraSpeed = 20.0f;
@@ -21,8 +23,7 @@ SampleWindow::SampleWindow(unsigned int width, unsigned int height, const std::s
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	//glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 	glfwWindowHint(GLFW_SAMPLES, 32);
-	this->width = width;
-	this->height = height;
+	this->width = width; this->height = height;
 	window = glfwCreateWindow(width, height, windowTitle.c_str(), NULL, NULL);
 	if (!window)
 	{
@@ -52,18 +53,19 @@ SampleWindow::SampleWindow(unsigned int width, unsigned int height, const std::s
 	{
 		SampleWindow::Update();
 	}
-
+	GUIManager::DeleteContext();
 	glfwTerminate();
 }
 
 
 void SampleWindow::Init()
 {
+	GUIManager::CreateContext(window);
 	camera = new Camera(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	float vertices[] = {
 		1.f,  1.f, 0.0f,  1.f,  1.f,
-		1.f, -1.f, 0.0f,  1.f,  0.f, 
-	   -1.f, -1.f, 0.0f,  0.f,  0.f, 
+		1.f, -1.f, 0.0f,  1.f,  0.f,
+	   -1.f, -1.f, 0.0f,  0.f,  0.f,
 	   -1.f,  1.f, 0.0f,  0.f,  1.f,
 	};
 	unsigned int indices[] = {
@@ -103,14 +105,30 @@ void SampleWindow::Init()
 
 void SampleWindow::Update()
 {
+	!hasGUI ? glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED) : glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	glfwPollEvents();
 	OnInputUpdate();
+	GUIUpdate();
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	SampleWindow::PathTrace();
 	SampleWindow::RenderPathResult();
 	hasCameraMoved = false;
 	hasTriggeredMovement = false;
+	GUIManager::DrawData();
 	glfwSwapBuffers(window);
+
+}
+
+void SampleWindow::GUIUpdate() {
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+	if (hasGUI)
+	{
+		GUIManager::DrawSampleData();
+	}
+
+	ImGui::EndFrame();
 
 }
 
@@ -135,6 +153,7 @@ void SampleWindow::RenderPathResult() {
 	glBindTexture(GL_TEXTURE_2D, computeTexture);
 	glBindVertexArray(quadVAO);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	GUIManager::DrawData();
 }
 
 void SampleWindow::AddShaders()
@@ -159,35 +178,43 @@ void SampleWindow::OnKeyPress(GLFWwindow* window, int key, int scancode, int act
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, true);
 	}
+	if (key == GLFW_KEY_G && action == GLFW_PRESS) {
+		hasGUI ^= true;
+		if (hasGUI == false) {
+
+			glfwSetCursorPos(window, width / 2, height / 2);
+		}
+	}
 }
 
 void SampleWindow::OnCursorPositionChange(GLFWwindow* window, double xPosition, double yPosition) {
-
-	hasTriggeredMovement = true;
-	if (firstMouseMove) {
-		firstMouseMove = false;
+	if (!hasGUI) {
+		hasTriggeredMovement = true;
+		if (firstMouseMove) {
+			firstMouseMove = false;
+			lastMouseX = xPosition;
+			lastMouseY = yPosition;
+		}
+		float xOffset = xPosition - lastMouseX;
+		float yOffset = lastMouseY - yPosition;
 		lastMouseX = xPosition;
 		lastMouseY = yPosition;
+
+		yaw += mouseSensitivity * xOffset;
+		pitch += mouseSensitivity * yOffset;
+
+		if (pitch > 89.0f)
+			pitch = 89.0f;
+		if (pitch < -89.0f)
+			pitch = -89.0f;
+
+		glm::vec3 front;
+		front.x = glm::cos(glm::radians(pitch)) * cos(glm::radians(yaw));
+		front.y = glm::sin(glm::radians(pitch));
+		front.z = glm::cos(glm::radians(pitch)) * glm::sin(glm::radians(yaw));
+
+		camera->setCameraFront(glm::normalize(front));
 	}
-	float xOffset = xPosition - lastMouseX;
-	float yOffset = lastMouseY - yPosition;
-	lastMouseX = xPosition;
-	lastMouseY = yPosition;
-
-	yaw += mouseSensitivity * xOffset;
-	pitch += mouseSensitivity * yOffset;
-
-	if (pitch > 89.0f)
-		pitch = 89.0f;
-	if (pitch < -89.0f)
-		pitch = -89.0f;
-
-	glm::vec3 front;
-	front.x = glm::cos(glm::radians(pitch)) * cos(glm::radians(yaw));
-	front.y = glm::sin(glm::radians(pitch));
-	front.z = glm::cos(glm::radians(pitch)) * glm::sin(glm::radians(yaw));
-
-	camera->setCameraFront(glm::normalize(front));
 }
 
 void SampleWindow::OnScrollChange(GLFWwindow* window, double xOffset, double yOffset) {

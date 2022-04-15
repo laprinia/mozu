@@ -34,6 +34,7 @@ GLuint ShaderManager::AddComputeShader(const std::string& startName)
 	return shaderProgram;
 }
 
+
 std::string ShaderManager::ReadFromFile(const std::string& location) {
 	std::string fileContent;
 	std::ifstream fileStream(location, std::ios::in);

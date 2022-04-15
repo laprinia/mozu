@@ -88,7 +88,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)mozu\src\includes\glm\glm;$(SolutionDir)mozu\src\includes\glfw\include;$(SolutionDir)mozu\src\includes\glew\include;$(SolutionDir)mozul\src\includes\assimp\include;$(SolutionDir)mozu\src\includes\soil\include\SOIL;$(SolutionDir)mozu\src\includes\imgui\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)mozu\src\includes\glm\glm;$(SolutionDir)mozu\src\includes\glfw\include;$(SolutionDir)mozu\src\includes\glew\include;$(SolutionDir)mozul\src\includes\assimp\include;$(SolutionDir)mozu\src\includes\soil\include\SOIL;$(SolutionDir)mozu\src\imgui;$(SolutionDir)mozu\src\window</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -105,7 +105,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)mozu\src\includes\glm\glm;$(SolutionDir)mozu\src\includes\glfw\include;$(SolutionDir)mozu\src\includes\glew\include;$(SolutionDir)mozul\src\includes\assimp\include;$(SolutionDir)mozu\src\includes\soil\include\SOIL;$(SolutionDir)mozu\src\includes\imgui\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)mozu\src\includes\glm\glm;$(SolutionDir)mozu\src\includes\glfw\include;$(SolutionDir)mozu\src\includes\glew\include;$(SolutionDir)mozul\src\includes\assimp\include;$(SolutionDir)mozu\src\includes\soil\include\SOIL;$(SolutionDir)mozu\src\imgui;$(SolutionDir)mozu\src\window</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -122,7 +122,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)mozu\src\includes\glm\glm;$(SolutionDir)mozu\src\includes\glfw\include;$(SolutionDir)mozu\src\includes\glew\include;$(SolutionDir)mozul\src\includes\assimp\include;$(SolutionDir)mozu\src\includes\soil\include\SOIL;$(SolutionDir)mozu\src\includes\imgui\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)mozu\src\includes\glm\glm;$(SolutionDir)mozu\src\includes\glfw\include;$(SolutionDir)mozu\src\includes\glew\include;$(SolutionDir)mozul\src\includes\assimp\include;$(SolutionDir)mozu\src\includes\soil\include\SOIL;$(SolutionDir)mozu\src\imgui;$(SolutionDir)mozu\src\window</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -139,7 +139,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)mozu\src\includes\glm\glm;$(SolutionDir)mozu\src\includes\glfw\include;$(SolutionDir)mozu\src\includes\glew\include;$(SolutionDir)mozul\src\includes\assimp\include;$(SolutionDir)mozu\src\includes\soil\include\SOIL;$(SolutionDir)mozu\src\includes\imgui\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)mozu\src\includes\glm\glm;$(SolutionDir)mozu\src\includes\glfw\include;$(SolutionDir)mozu\src\includes\glew\include;$(SolutionDir)mozul\src\includes\assimp\include;$(SolutionDir)mozu\src\includes\soil\include\SOIL;$(SolutionDir)mozu\src\imgui;$(SolutionDir)mozu\src\window</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -152,6 +152,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\camera\Camera.cpp" />
+    <ClCompile Include="src\gui\GUIManager.cpp" />
+    <ClCompile Include="src\imgui\imgui.cpp" />
+    <ClCompile Include="src\imgui\imgui_demo.cpp" />
+    <ClCompile Include="src\imgui\imgui_draw.cpp" />
+    <ClCompile Include="src\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="src\imgui\imgui_impl_opengl2.cpp" />
+    <ClCompile Include="src\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="src\imgui\imgui_tables.cpp" />
+    <ClCompile Include="src\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\input\InputManager.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\shaders\ShaderManager.cpp" />
@@ -159,6 +168,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\camera\Camera.h" />
+    <ClInclude Include="src\gui\GUIManager.h" />
+    <ClInclude Include="src\imgui\imconfig.h" />
+    <ClInclude Include="src\imgui\imgui.h" />
+    <ClInclude Include="src\imgui\imgui_impl_glfw.h" />
+    <ClInclude Include="src\imgui\imgui_impl_opengl2.h" />
+    <ClInclude Include="src\imgui\imgui_impl_opengl3.h" />
+    <ClInclude Include="src\imgui\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="src\imgui\imgui_internal.h" />
+    <ClInclude Include="src\imgui\imstb_rectpack.h" />
+    <ClInclude Include="src\imgui\imstb_textedit.h" />
+    <ClInclude Include="src\imgui\imstb_truetype.h" />
     <ClInclude Include="src\input\InputManager.h" />
     <ClInclude Include="src\shaders\ShaderManager.h" />
     <ClInclude Include="src\window\SampleWindow.h" />

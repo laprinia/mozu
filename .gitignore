@@ -4,6 +4,7 @@
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
 /mozu/src/includes
+/mozu/src/imgui
 
 # User-specific files
 *.rsuser
