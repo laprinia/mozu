@@ -1,12 +1,11 @@
 #version 460 core
-out vec4 FragColor;
-
-in vec2 TexCoord;
-uniform sampler2D ourTexture;
+out vec4 fragmentColor;
+in vec2 outTextCoord;
+uniform sampler2D RTtexture;
 
 void main()
 {
-vec3 color = texture(ourTexture, TexCoord).rgb;
+  vec3 color = texture(RTtexture, outTextCoord).rgb;
     color = pow(color, vec3(1.0/2.2));
-    FragColor = vec4(color, 1.0);
-}
+    fragmentColor = vec4(color, 1.0);
+} 
