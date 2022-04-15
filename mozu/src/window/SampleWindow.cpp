@@ -109,7 +109,7 @@ void SampleWindow::Update()
 	glfwPollEvents();
 	OnInputUpdate();
 	GUIUpdate();
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	SampleWindow::PathTrace();
 	SampleWindow::RenderPathResult();
 	hasCameraMoved = false;
@@ -139,7 +139,12 @@ void SampleWindow::PathTrace() {
 	glViewport(0, 0, width, height);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUseProgram(shaders["trace"]);
-	glDispatchCompute(width / 4, height / 4, 1);
+
+	glm::mat4 projection = glm::mat4(1.0f);
+	projection = glm::perspective(glm::radians(camera->getFieldOfView()), (float)width / (float)height, 0.1f, 800.0f);
+
+	glUniformMatrix4fv(glGetUniformLocation(shaders["trace"], "invProjection"), 1, GL_FALSE, glm::value_ptr(glm::inverse(projection)));
+	glDispatchCompute(width, height, 1);
 	glMemoryBarrier(GL_ALL_BARRIER_BITS);
 	frameNumber++;
 
