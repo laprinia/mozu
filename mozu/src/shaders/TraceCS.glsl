@@ -73,22 +73,31 @@ Ray computeRay(float x, float y, vec2 pixel)
     return r;
 }
 
-bool hasHitSphere(in vec3 center, float radius, in Ray ray) {
+float hitSphere(in vec3 center, float radius, in Ray ray) {
     vec3 oc = ray.origin - center;
     float a = dot(ray.direction, ray.direction);
     float b = 2.0 * dot(oc, ray.direction);
     float c = dot(oc, oc) - radius * radius;
     float discriminant = b * b - 4 * a * c;
-    return (discriminant > 0);
+    if (discriminant < 0) {
+        return -1.0;
+    } else {
+    
+     return (-b - sqrt(discriminant) ) / (2.0*a);
+
+    }
 }
 
 vec3 trace(in Ray ray, in Scene scene){
 
-    if (hasHitSphere(vec3(0, 0, 1),0.5f,ray)) return vec3(0.6,0.2,0);
+    float hit = hitSphere(vec3(0, 0, -1),0.5f,ray);
+    if (hit>0.0f) {
+        vec3 normalized = normalize(ray.origin+ hit* ray.direction - vec3(0,0,-1));
+        return 0.5 * vec3(normalized.x+1,normalized.y+1,normalized.z+1);
+    }
     vec3 unitDir = normalize(ray.direction);
-    float t = 0.5 * (unitDir.y + 1.0);
-    vec3 skyColor = (1.0 - t) * vec3(1.0) + t * vec3(0.3, 0.5, 1.0);
-    return skyColor;
+    hit = 0.5 * (unitDir.y + 1.0);
+    return (1.0 - hit) * vec3(1.0) + hit * vec3(0.3, 0.5, 1.0);
 
 }
 
