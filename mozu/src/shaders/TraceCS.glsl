@@ -5,6 +5,7 @@ const int samplesPerPixel = 2;
 uniform mat4 invProjection;
 uniform float aspectRatio;
 uniform vec2 resolution;
+uniform int samples;
 const double pi = 3.1415926535897932385;
 struct Ray
 {
@@ -144,9 +145,12 @@ void main() {
     scene.spheres[1].position = vec3(0.0, 0.0, -1.0);
     scene.spheres[1].matID = 0;
 
+    for (int i = 0; i < samples; i++)
+    {
     Ray ray = computeRay(pixelCoord.x, pixelCoord.y, gl_GlobalInvocationID.xy);
-    color = trace(ray, scene);
-
+    color += trace(ray, scene);
+    }
+    color /=float(samples);
     imageStore(image, pixelCoord, vec4(color, 0.0));
 
 }

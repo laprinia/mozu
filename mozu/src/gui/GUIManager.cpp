@@ -36,9 +36,10 @@ void GUIManager::DrawData()
 
 }
 
-void GUIManager::DrawSampleData()
+void GUIManager::DrawSampleData(int* samples)
 {
 	ImGui::Begin("mozu");
+	ImGui::DragInt("Samples per pixel", samples, 4.0f, 1, 200);
 	ImGui::End();
 }
 

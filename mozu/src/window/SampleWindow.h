@@ -41,8 +41,9 @@ private:
 	unsigned int* fbID;
 	unsigned int* bufferTexture;
 	int frameNumber = 0;
-	static bool hasGUI;
 
+	static bool hasGUI;
+	static int samples;
 	void Init();
 	void Update();
 	void GUIUpdate();
