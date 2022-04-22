@@ -5,7 +5,7 @@ const int samplesPerPixel = 2;
 uniform mat4 invProjection;
 uniform float aspectRatio;
 uniform vec2 resolution;
-
+const double pi = 3.1415926535897932385;
 struct Ray
 {
     vec3 direction;
@@ -73,31 +73,56 @@ Ray computeRay(float x, float y, vec2 pixel)
     return r;
 }
 
-float hitSphere(in vec3 center, float radius, in Ray ray) {
-    vec3 oc = ray.origin - center;
-    float a = dot(ray.direction, ray.direction);
-    float b = 2.0 * dot(oc, ray.direction);
-    float c = dot(oc, oc) - radius * radius;
-    float discriminant = b * b - 4 * a * c;
+bool hitSphere(in float tMin, in float tMax, in Ray r, in Sphere s, out HitRecord hit) {
+    vec3 oc = r.origin - s.position;
+    float a = dot(r.direction, r.direction);
+    float b = dot(oc, r.direction);
+    float c = dot(oc, oc) - s.radius * s.radius;
+    float discriminant = b * b - a * c;
     if (discriminant < 0) {
-        return -1.0;
+        return false;
     } else {
-    
-     return (-b - sqrt(discriminant) ) / (2.0*a);
+
+    float root = (-b - sqrt(b * b - a * c)) / a;
+
+        if (root > tMax || root < tMin)
+        {
+            root = (-b + sqrt(b * b - a * c)) / a;
+            if (root > tMax || root < tMin) return false;
+        }
+    hit.t = root;
+    hit.position = r.origin + r.direction * hit.t;
+    hit.normal = normalize((hit.position - s.position) / s.radius);
 
     }
+    return true;
 }
 
-vec3 trace(in Ray ray, in Scene scene){
+bool hitScene(in float tMin, in float tMax, Ray ray, Scene scene, out HitRecord rec) {
+    float closest = tMax;
+    bool hasHitAnything = false;
+    for (int i = 0; i <scene.sphereNo; i++) {
+    
+        if (hitSphere(tMin, closest, ray, scene.spheres[i], rec)) {
+               hasHitAnything = true;
+               closest = rec.t;
+        }
+    }
+    return hasHitAnything;
+}
 
-    float hit = hitSphere(vec3(0, 0, -1),0.5f,ray);
-    if (hit>0.0f) {
-        vec3 normalized = normalize(ray.origin+ hit* ray.direction - vec3(0,0,-1));
-        return 0.5 * vec3(normalized.x+1,normalized.y+1,normalized.z+1);
+
+vec3 trace(in Ray ray, in Scene scene){
+    HitRecord rec;
+    if(hitScene(0.001, 100000.0,ray,scene,rec)) {
+    
+        return 0.5 * (rec.normal + vec3(1.0));
+
     }
     vec3 unitDir = normalize(ray.direction);
-    hit = 0.5 * (unitDir.y + 1.0);
-    return (1.0 - hit) * vec3(1.0) + hit * vec3(0.3, 0.5, 1.0);
+    float t = 0.5 * (unitDir.y + 1.0);
+    vec3 skyColor = vec3(0.3,0.8,1.0);
+    return (1.0 - t) * vec3(1.0) + t * skyColor;
 
 }
 
@@ -106,6 +131,19 @@ void main() {
     vec3 color = vec3(0.0);
 
     Scene scene;
+    scene.sphereNo=2;
+    scene.matNo=2;
+
+    //groud
+    scene.spheres[0].radius = 100;
+    scene.spheres[0].position = vec3(0.0, -100.5, -2.0);
+    scene.spheres[0].matID = 0;
+
+    //actual sphere
+    scene.spheres[1].radius = 0.5;
+    scene.spheres[1].position = vec3(0.0, 0.0, -1.0);
+    scene.spheres[1].matID = 0;
+
     Ray ray = computeRay(pixelCoord.x, pixelCoord.y, gl_GlobalInvocationID.xy);
     color = trace(ray, scene);
 
