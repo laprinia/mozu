@@ -136,54 +136,65 @@ Ray createRay(in vec3 origin, in vec3 direction)
     return r;
 }
 
-bool hitSphere(in float tMin, in float tMax, in Ray r, in Sphere s, out HitRecord hit) {
+bool hitSphere(in float tMin, in float tMax, in Ray r, in Sphere s, out HitRecord hr) {
     vec3 oc = r.origin - s.position;
     float a = dot(r.direction, r.direction);
     float b = dot(oc, r.direction);
     float c = dot(oc, oc) - s.radius * s.radius;
     float discriminant = b * b - a * c;
-    if (discriminant < 0) {
-        return false;
-    } else {
+    if (discriminant > 0.0)
+    {
+        float root = (-b - sqrt(b * b - a * c)) / a;
 
-    float root = (-b - sqrt(b * b - a * c)) / a;
-
-        if (root > tMax || root < tMin)
+        if (root < tMax && root > tMin)
         {
-            root = (-b + sqrt(b * b - a * c)) / a;
-            if (root > tMax || root < tMin) return false;
-        }
-    hit.t = root;
-    hit.position = r.origin + r.direction * hit.t;
-    hit.normal = normalize((hit.position - s.position) / s.radius);
+            hr.t = root;
+            hr.position = r.origin + r.direction * hr.t;
+            hr.normal = normalize((hr.position - s.position) / s.radius);
+            hr.matID = s.matID;
 
+            return true;
+        }
+
+        root = (-b + sqrt(b * b - a * c)) / a;
+
+        if (root < tMax && root > tMin)
+        {
+            hr.t = root;
+            hr.position = r.origin + r.direction * hr.t;
+            hr.normal = normalize((hr.position - s.position) / s.radius);
+            hr.matID = s.matID;
+
+            return true;
+        }
     }
-    return true;
+
+    return false;
 }
 
-bool hitScene(in float tMin, in float tMax, Ray ray, Scene scene, out HitRecord rec) {
+bool hitScene(in float tMin, in float tMax, Ray ray, Scene scene, out HitRecord hr) {
     float closest = tMax;
     bool hasHitAnything = false;
     for (int i = 0; i <scene.sphereNo; i++) {
     
-        if (hitSphere(tMin, closest, ray, scene.spheres[i], rec)) {
+        if (hitSphere(tMin, closest, ray, scene.spheres[i], hr)) {
                hasHitAnything = true;
-               closest = rec.t;
+               closest = hr.t;
         }
     }
     return hasHitAnything;
 }
 
-bool scatterLambertian(in Ray ray, in HitRecord rec, out Ray scattered, out vec3 attenuation)
+bool scatterLambertian(in Ray ray, in HitRecord hr,Material material, out Ray scattered, out vec3 attenuation)
 {
-    vec3 newDirection = rec.position + rec.normal + randomInUnitVector(state);
-    scattered = createRay(rec.position, normalize(newDirection - rec.position));
-    attenuation = vec3(1.0,0.78,0.37);
+    vec3 newDirection = hr.position + hr.normal + randomInUnitVector(state);
+    scattered = createRay(hr.position, normalize(newDirection - hr.position));
+    attenuation = material.albedo;
     return true;
 }
 
 vec3 trace(in Ray ray, in Scene scene){
-    HitRecord rec;
+    HitRecord hr;
     Ray newRay = ray;
     vec3 attenuation = vec3(0.0);
     vec3 color = vec3(1.0);
@@ -191,9 +202,9 @@ vec3 trace(in Ray ray, in Scene scene){
 
     while (depth < maxDepth) {
 
-        if (hitScene(0.01, 1000.0, newRay, scene, rec)) {
+        if (hitScene(0.01, 1000.0, newRay, scene, hr)) {
             Ray scattered;
-            if (scatterLambertian(newRay, rec, scattered,attenuation)) {
+            if (scatterLambertian(newRay, hr,scene.materials[hr.matID], scattered,attenuation)) {
 
                 color *= attenuation;
                 newRay = scattered;
@@ -222,21 +233,28 @@ void main() {
     ivec2 pixelCoord = ivec2(gl_GlobalInvocationID.xy);
     state = gl_GlobalInvocationID.x * 1973 + gl_GlobalInvocationID.y * 9277  * 2699 | 1;
 
-    vec3 color = vec3(0.0);
-
     Scene scene;
     scene.sphereNo=2;
     scene.matNo=2;
 
+    //materials
+    scene.materials[0].type = LAMBERTIAN;
+    scene.materials[0].albedo = vec3(1.0,0.78,0.37);
+
+    scene.materials[1].type = LAMBERTIAN;
+    scene.materials[1].albedo = vec3(0.35,0.32,0.27);
+
     //groud
     scene.spheres[0].radius = 100;
     scene.spheres[0].position = vec3(0.0, -100.5, -2.0);
-    scene.spheres[0].matID = 0;
+    scene.spheres[0].matID = 1;
 
     //actual sphere
     scene.spheres[1].radius = 0.5;
     scene.spheres[1].position = vec3(0.0, 0.01, -1.0);
     scene.spheres[1].matID = 0;
+
+    vec3 color = vec3(0.0);
 
     for (int i = 0; i < samples; i++)
     {
