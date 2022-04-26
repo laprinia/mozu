@@ -29,6 +29,10 @@ OpenGL ray tracer based on the "Ray Tracing in One Weekend series".
 ![framework screenshot](mozu/screens/4.png "Scattering for two metallic materials with roughness 0.8 & 0.3")
 > For metallic surfaces,rays aren't randomly scattered. Luckily, GLSL has the reflect function which returns the reflected ray. Randomizing the reflected ray by choosing a random endpoint as we did for the matte surface, we can get more rough (fuzzy) surfaces.
 
+#### Computing rays for a glass material - Dielectric
+![framework screenshot](mozu/screens/5.png "Refraction on a dielectric surface")
+>For a dielectric surface, a ray is split into both a reflected one and a refracted one. Assuming that all rays are only refracted we get this result.
+
 ### 📚Resources:
 
 [Ray Tracing in One Weekend](https://raytracing.github.io/)

@@ -77,7 +77,7 @@ struct Metal
 
 struct Dielectric
 {
-    float reflection;
+    float refractIDX;
     float roughness;
 };
 
@@ -103,6 +103,21 @@ struct Scene
     Sphere spheres[10];
     Material materials[10];
 };
+
+bool refract(in vec3 v, in vec3 n, in float etaiOverEtat, out vec3 refracted)
+{
+    vec3 uv = normalize(v);
+    float dt = dot(uv, n);
+    float discriminant = 1.0 - etaiOverEtat * etaiOverEtat * (1 - dt * dt);
+
+    if (discriminant > 0)
+    {
+        refracted = etaiOverEtat * (uv - n * dt) - n * sqrt(discriminant);
+        return true;
+    }
+    else
+        return false;
+}
  
 Ray computeRay(float x, float y, vec2 pixel)
 {
@@ -187,6 +202,7 @@ bool hitScene(in float tMin, in float tMax, Ray ray, Scene scene, out HitRecord 
 
 bool scatterLambertian(in Ray ray, in HitRecord hr, Material material, out Ray scattered, out vec3 attenuation) {
     vec3 newDirection = hr.position + hr.normal + randomInUnitVector(state);
+    
     scattered = createRay(hr.position, normalize(newDirection - hr.position));
     attenuation = material.albedo;
     return true;
@@ -200,6 +216,30 @@ bool scatterMetallic(in Ray ray, HitRecord hr, Material material, out Ray scatte
     attenuation = material.albedo;
 
     return dot(scattered.direction,hr.normal)>0;
+}
+
+bool scatterDielectric(in Ray ray, HitRecord hr, Material material, out Ray scattered, out vec3 attenuation) {
+    
+    vec3 unitDir = normalize(ray.direction);
+    vec3 outNormal;
+    attenuation = vec3(1.0);
+
+    float etaiOverEtat;
+    if (dot(ray.direction,hr.normal) > 0) {
+        outNormal = -hr.normal;
+        etaiOverEtat = material.dielectric.refractIDX;
+    
+    } else {
+        outNormal = hr.normal;
+        etaiOverEtat = 1/ material.dielectric.refractIDX;
+    }
+    vec3 refracted;
+    refract(unitDir,outNormal,etaiOverEtat,refracted);
+   
+    scattered = createRay(hr.position, normalize(refracted));
+
+    return true;
+
 }
 
 vec3 trace(in Ray ray, in Scene scene){
@@ -236,6 +276,18 @@ vec3 trace(in Ray ray, in Scene scene){
                     break;
                 }
             }
+            else if(scene.materials[hr.matID].type==DIELECTRIC) {
+            
+                if (scatterDielectric(newRay, hr,scene.materials[hr.matID], scattered,attenuation)) {
+
+                    color *= attenuation;
+                    newRay = scattered;
+                } else {
+
+                    color *= vec3(0.0);
+                    break;
+                }
+            }
         } else {
 
             vec3 unitDir = normalize(ray.direction);
@@ -257,8 +309,8 @@ void main() {
     state = gl_GlobalInvocationID.x * 1973 + gl_GlobalInvocationID.y * 9277  * 2699 | 1;
 
     Scene scene;
-    scene.sphereNo=4;
-    scene.matNo=4;
+    scene.sphereNo=5;
+    scene.matNo=5;
 
     //materials
     scene.materials[0].type = LAMBERTIAN;
@@ -274,6 +326,10 @@ void main() {
     scene.materials[3].type = METALLIC;
     scene.materials[3].albedo = vec3(0.66,0.41,0.51);
     scene.materials[3].metal.roughness = 0.8;
+
+    scene.materials[4].type = DIELECTRIC;
+    scene.materials[4].albedo = vec3(0.52, 0.63, 0.87);
+    scene.materials[4].dielectric.refractIDX = 1.51714;
 
     //groud
     scene.spheres[0].radius = 100;
@@ -292,6 +348,10 @@ void main() {
     scene.spheres[3].radius = 1;
     scene.spheres[3].position = vec3(4.0, 0.3, 2.0);
     scene.spheres[3].matID = 3;
+
+    scene.spheres[4].radius = 0.8;
+    scene.spheres[4].position = vec3(6.0, 0.0, 2.0);
+    scene.spheres[4].matID = 4;
 
     vec3 color = vec3(0.0);
 
