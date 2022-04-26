@@ -118,6 +118,13 @@ bool refract(in vec3 v, in vec3 n, in float etaiOverEtat, out vec3 refracted)
     else
         return false;
 }
+
+float schlick(float cosine, float refractIDX)
+{
+    float r0 = (1.0 - refractIDX) / (1.0 + refractIDX);
+    r0 = r0 * r0;
+    return r0 + (1.0 - r0) * pow((1.0 - cosine), 5);
+}
  
 Ray computeRay(float x, float y, vec2 pixel)
 {
@@ -219,27 +226,46 @@ bool scatterMetallic(in Ray ray, HitRecord hr, Material material, out Ray scatte
 }
 
 bool scatterDielectric(in Ray ray, HitRecord hr, Material material, out Ray scattered, out vec3 attenuation) {
-    
-    vec3 unitDir = normalize(ray.direction);
-    vec3 outNormal;
-    attenuation = vec3(1.0);
 
+    vec3 unitDir = normalize(ray.direction);
+    vec3 reflected = reflect(ray.direction, hr.normal);
+    attenuation = vec3(1.0);
+    vec3 outNormal;
+    float reflectProb;
+    attenuation = vec3(1.0);
+    float cosTheta;
     float etaiOverEtat;
-    if (dot(ray.direction,hr.normal) > 0) {
+
+
+    if (dot(ray.direction, hr.normal) > 0) {
         outNormal = -hr.normal;
         etaiOverEtat = material.dielectric.refractIDX;
-    
+        cosTheta = material.dielectric.refractIDX * dot(ray.direction, hr.normal) / length(ray.direction);
+
     } else {
         outNormal = hr.normal;
-        etaiOverEtat = 1/ material.dielectric.refractIDX;
+        etaiOverEtat = 1 / material.dielectric.refractIDX;
+        cosTheta = -dot(ray.direction, hr.normal) / length(ray.direction);
     }
+
     vec3 refracted;
-    refract(unitDir,outNormal,etaiOverEtat,refracted);
-   
-    scattered = createRay(hr.position, normalize(refracted));
+
+    if (refract(ray.direction, outNormal, etaiOverEtat, refracted))
+        reflectProb = schlick(cosTheta, material.dielectric.refractIDX);
+    else
+        reflectProb = 1.0;
+
+    if (reflectProb > randomFloat(state)) {
+        scattered = createRay(hr.position, normalize(reflected));
+
+    } else {
+
+        refract(unitDir, outNormal, etaiOverEtat, refracted);
+        scattered = createRay(hr.position, normalize(refracted));
+
+    }
 
     return true;
-
 }
 
 vec3 trace(in Ray ray, in Scene scene){
@@ -328,7 +354,7 @@ void main() {
     scene.materials[3].metal.roughness = 0.8;
 
     scene.materials[4].type = DIELECTRIC;
-    scene.materials[4].albedo = vec3(0.52, 0.63, 0.87);
+    scene.materials[4].albedo = vec3(0.1, 0.1, 0.1);
     scene.materials[4].dielectric.refractIDX = 1.51714;
 
     //groud

@@ -33,6 +33,9 @@ OpenGL ray tracer based on the "Ray Tracing in One Weekend series".
 ![framework screenshot](mozu/screens/5.png "Refraction on a dielectric surface")
 >For a dielectric surface, a ray is split into both a reflected one and a refracted one. Assuming that all rays are only refracted we get this result.
 
+![framework screenshot](mozu/screens/6.png "Refraction & reflection on a dielectric surface")
+>Using Schlick's polynomial aproximation we can determine if rays must pe reflected instead of refracted, giving the final result.
+
 ### 📚Resources:
 
 [Ray Tracing in One Weekend](https://raytracing.github.io/)
