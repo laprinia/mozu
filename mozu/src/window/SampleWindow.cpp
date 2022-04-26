@@ -156,6 +156,8 @@ void SampleWindow::PathTrace() {
 	glm::vec2 resolution = glm::vec2(float(width), float(height));
 	glUniform1f(glGetUniformLocation(shaders["trace"], "fov"), camera->getFieldOfView());
 	glUniform2fv(glGetUniformLocation(shaders["trace"], "resolution"), 1, glm::value_ptr(resolution));
+	glUniform1f(glGetUniformLocation(shaders["trace"], "frameNo"), frameNumber);
+	glUniform1f(glGetUniformLocation(shaders["trace"], "accum"), float(frameNumber) / float(frameNumber + 1));
 
 	glUniform1i(glGetUniformLocation(shaders["trace"], "samples"), samples);
 	glUniform1i(glGetUniformLocation(shaders["trace"], "maxDepth"), maxDepth);

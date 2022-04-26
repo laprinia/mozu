@@ -6,6 +6,8 @@ uniform mat4 invProjection;
 uniform mat4 invView;
 uniform float aspectRatio;
 uniform vec2 resolution;
+uniform float accum;
+uniform float frameNo;
 uniform int samples;
 uniform int maxDepth;
 uniform float fov;
@@ -332,7 +334,7 @@ vec3 trace(in Ray ray, in Scene scene){
 
 void main() {
     ivec2 pixelCoord = ivec2(gl_GlobalInvocationID.xy);
-    state = gl_GlobalInvocationID.x * 1973 + gl_GlobalInvocationID.y * 9277  * 2699 | 1;
+    state = gl_GlobalInvocationID.x * 1973 + gl_GlobalInvocationID.y * 9277+uint(frameNo)  * 2699 | 1;
 
     Scene scene;
     scene.sphereNo=5;
@@ -392,7 +394,7 @@ void main() {
 
     vec3 previous = imageLoad(image, pixelCoord).rgb;
 
-    vec3 final = mix(color, previous, 0);
+    vec3 final = mix(color, previous, accum);
 
     imageStore(image, pixelCoord, vec4(final, 0.0));
 
