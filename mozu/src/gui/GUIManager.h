@@ -17,6 +17,6 @@ public:
 
 	static GUIManager& CreateContext(GLFWwindow* windowContext);
 	static void DrawData();
-	static void DrawSampleData(int* samples);
+	static void DrawSampleData(int* samples, int* maxDepth);
 	static void DeleteContext();
 };

@@ -7,6 +7,7 @@ uniform mat4 invView;
 uniform float aspectRatio;
 uniform vec2 resolution;
 uniform int samples;
+uniform int maxDepth;
 uniform float fov;
 
 
@@ -188,7 +189,7 @@ vec3 trace(in Ray ray, in Scene scene){
     vec3 color = vec3(1.0);
     int depth = 0;
 
-    while (depth < 50) {
+    while (depth < maxDepth) {
 
         if (hitScene(0.01, 1000.0, newRay, scene, rec)) {
             Ray scattered;
@@ -198,7 +199,7 @@ vec3 trace(in Ray ray, in Scene scene){
                 newRay = scattered;
             } else {
 
-                color*=vec3(0.0);
+                color *= vec3(0.0);
                 break;
             }
         } else {
@@ -212,7 +213,7 @@ vec3 trace(in Ray ray, in Scene scene){
 
         depth++;
     }
-    if (depth < 50) return color;
+    if (depth < maxDepth) return color;
     else return vec3(0.0);
 
 }

@@ -17,6 +17,7 @@ double SampleWindow::pitch = 0.0f;
 float SampleWindow::mouseSensitivity = 0.1f;
 
 int SampleWindow::samples = 1;
+int SampleWindow::maxDepth = 50;
 
 SampleWindow::SampleWindow(unsigned int width, unsigned int height, const std::string& windowTitle)
 {
@@ -127,7 +128,7 @@ void SampleWindow::GUIUpdate() {
 	ImGui::NewFrame();
 	if (hasGUI)
 	{
-		GUIManager::DrawSampleData(&samples);
+		GUIManager::DrawSampleData(&samples, &maxDepth);
 	}
 
 	ImGui::EndFrame();
@@ -153,11 +154,11 @@ void SampleWindow::PathTrace() {
 
 	glUniform1f(glGetUniformLocation(shaders["trace"], "aspectRatio"), float(width) / float(height));
 	glm::vec2 resolution = glm::vec2(float(width), float(height));
-
-	glUniform2fv(glGetUniformLocation(shaders["trace"], "resolution"), 1, glm::value_ptr(resolution));
-	glUniform1i(glGetUniformLocation(shaders["trace"], "samples"), samples);
-
 	glUniform1f(glGetUniformLocation(shaders["trace"], "fov"), camera->getFieldOfView());
+	glUniform2fv(glGetUniformLocation(shaders["trace"], "resolution"), 1, glm::value_ptr(resolution));
+
+	glUniform1i(glGetUniformLocation(shaders["trace"], "samples"), samples);
+	glUniform1i(glGetUniformLocation(shaders["trace"], "maxDepth"), maxDepth);
 
 	glDispatchCompute(width, height, 1);
 	glMemoryBarrier(GL_ALL_BARRIER_BITS);

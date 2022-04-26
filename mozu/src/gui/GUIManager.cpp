@@ -36,10 +36,11 @@ void GUIManager::DrawData()
 
 }
 
-void GUIManager::DrawSampleData(int* samples)
+void GUIManager::DrawSampleData(int* samples, int* maxDepth)
 {
 	ImGui::Begin("mozu");
 	ImGui::DragInt("Samples per pixel", samples, 4.0f, 1, 200);
+	ImGui::DragInt("Max Depth", maxDepth, 10.0f, 5, 200);
 	ImGui::End();
 }
 

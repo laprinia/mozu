@@ -44,6 +44,7 @@ private:
 
 	static bool hasGUI;
 	static int samples;
+	static int maxDepth;
 	void Init();
 	void Update();
 	void GUIUpdate();
