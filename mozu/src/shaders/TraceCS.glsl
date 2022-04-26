@@ -16,7 +16,7 @@ const double pi = 3.1415926535897932385;
 uint state = 0;
 
 #define LAMBERTIAN 0
-#define METALIC 1
+#define METALLIC 1
 #define DIELECTRIC 2
 
 uint random(inout uint state)
@@ -100,8 +100,8 @@ struct Scene
 {
     int sphereNo;
     int matNo;
-    Sphere spheres[3];
-    Material materials[3];
+    Sphere spheres[10];
+    Material materials[10];
 };
  
 Ray computeRay(float x, float y, vec2 pixel)
@@ -185,12 +185,21 @@ bool hitScene(in float tMin, in float tMax, Ray ray, Scene scene, out HitRecord 
     return hasHitAnything;
 }
 
-bool scatterLambertian(in Ray ray, in HitRecord hr,Material material, out Ray scattered, out vec3 attenuation)
-{
+bool scatterLambertian(in Ray ray, in HitRecord hr, Material material, out Ray scattered, out vec3 attenuation) {
     vec3 newDirection = hr.position + hr.normal + randomInUnitVector(state);
     scattered = createRay(hr.position, normalize(newDirection - hr.position));
     attenuation = material.albedo;
     return true;
+}
+
+bool scatterMetallic(in Ray ray, HitRecord hr, Material material, out Ray scattered, out vec3 attenuation) {
+    vec3 reflected = reflect(ray.direction, hr.normal);
+    float fuzziness = material.metal.roughness;
+    reflected = normalize(reflected+fuzziness*randomInUnitSphere(state));
+    scattered = createRay(hr.position, reflected);
+    attenuation = material.albedo;
+
+    return dot(scattered.direction,hr.normal)>0;
 }
 
 vec3 trace(in Ray ray, in Scene scene){
@@ -204,14 +213,28 @@ vec3 trace(in Ray ray, in Scene scene){
 
         if (hitScene(0.01, 1000.0, newRay, scene, hr)) {
             Ray scattered;
-            if (scatterLambertian(newRay, hr,scene.materials[hr.matID], scattered,attenuation)) {
+            if (scene.materials[hr.matID].type==LAMBERTIAN){
+                if (scatterLambertian(newRay, hr,scene.materials[hr.matID], scattered,attenuation)) {
 
-                color *= attenuation;
-                newRay = scattered;
-            } else {
+                    color *= attenuation;
+                    newRay = scattered;
+                } else {
 
-                color *= vec3(0.0);
-                break;
+                    color *= vec3(0.0);
+                    break;
+                }
+            }
+            else if(scene.materials[hr.matID].type==METALLIC) {
+            
+                if (scatterMetallic(newRay, hr,scene.materials[hr.matID], scattered,attenuation)) {
+
+                    color *= attenuation;
+                    newRay = scattered;
+                } else {
+
+                    color *= vec3(0.0);
+                    break;
+                }
             }
         } else {
 
@@ -234,8 +257,8 @@ void main() {
     state = gl_GlobalInvocationID.x * 1973 + gl_GlobalInvocationID.y * 9277  * 2699 | 1;
 
     Scene scene;
-    scene.sphereNo=2;
-    scene.matNo=2;
+    scene.sphereNo=4;
+    scene.matNo=4;
 
     //materials
     scene.materials[0].type = LAMBERTIAN;
@@ -244,15 +267,31 @@ void main() {
     scene.materials[1].type = LAMBERTIAN;
     scene.materials[1].albedo = vec3(0.35,0.32,0.27);
 
+    scene.materials[2].type = METALLIC;
+    scene.materials[2].albedo = vec3(0.37,0.32,0.63);
+    scene.materials[2].metal.roughness = 0.3;
+
+    scene.materials[3].type = METALLIC;
+    scene.materials[3].albedo = vec3(0.66,0.41,0.51);
+    scene.materials[3].metal.roughness = 0.8;
+
     //groud
     scene.spheres[0].radius = 100;
     scene.spheres[0].position = vec3(0.0, -100.5, -2.0);
     scene.spheres[0].matID = 1;
 
-    //actual sphere
+    //actual spheres
     scene.spheres[1].radius = 0.5;
     scene.spheres[1].position = vec3(0.0, 0.01, -1.0);
     scene.spheres[1].matID = 0;
+
+    scene.spheres[2].radius = 2;
+    scene.spheres[2].position = vec3(0.0, 1.4, 2.0);
+    scene.spheres[2].matID = 2;
+
+    scene.spheres[3].radius = 1;
+    scene.spheres[3].position = vec3(4.0, 0.3, 2.0);
+    scene.spheres[3].matID = 3;
 
     vec3 color = vec3(0.0);
 

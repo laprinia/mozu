@@ -25,6 +25,10 @@ OpenGL ray tracer based on the "Ray Tracing in One Weekend series".
 
 ![framework screenshot](mozu/screens/3-20samples.png "Lambertian scattering w/ unit vector method and 20 samples")
 > True Lambertian with 20 samples per pixel.
+#### Computing rays for a metallic material 
+![framework screenshot](mozu/screens/4.png "Scattering for two metallic materials with roughness 0.8 & 0.3")
+> For metallic surfaces,rays aren't randomly scattered. Luckily, GLSL has the reflect function which returns the reflected ray. Randomizing the reflected ray by choosing a random endpoint as we did for the matte surface, we can get more rough (fuzzy) surfaces.
+
 ### 📚Resources:
 
 [Ray Tracing in One Weekend](https://raytracing.github.io/)
