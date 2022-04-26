@@ -3,10 +3,58 @@ layout (local_size_x = 1, local_size_y = 1) in;
 layout (binding = 0, rgba32f) uniform  image2D image;
 const int samplesPerPixel = 2;
 uniform mat4 invProjection;
+uniform mat4 invView;
 uniform float aspectRatio;
 uniform vec2 resolution;
 uniform int samples;
+uniform float fov;
+
+
 const double pi = 3.1415926535897932385;
+
+uint state = 0;
+
+#define LAMBERTIAN 0
+#define METALIC 1
+#define DIELECTRIC 2
+
+uint random(inout uint state)
+{
+    uint x = state;
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 15;
+    state = x;
+    return x;
+}
+
+float randomFloat(inout uint state)
+{
+    return (random(state) & 0xFFFFFF) / 16777216.0f;
+}
+
+vec3 randomInUnitSphere(inout uint state)
+{
+    float z = randomFloat(state) * 2.0f - 1.0f;
+    float t = randomFloat(state) * 2.0f * 3.1415926f;
+    float r = sqrt(max(0.0, 1.0f - z * z));
+    float x = r * cos(t);
+    float y = r * sin(t);
+    vec3 res = vec3(x, y, z);
+    res *= pow(randomFloat(state), 1.0 / 3.0);
+    return res;
+}
+
+vec3 randomInUnitVector(inout uint state)
+{
+    float z = randomFloat(state) * 2.0f - 1.0f;
+    float a = randomFloat(state) * 2.0f * 3.1415926f;
+    float r = sqrt(1.0f - z * z);
+    float x = r * cos(a);
+    float y = r * sin(a);
+    return vec3(x, y, z);
+}
+
 struct Ray
 {
     vec3 direction;
@@ -57,18 +105,31 @@ struct Scene
  
 Ray computeRay(float x, float y, vec2 pixel)
 {
-    float u = pixel.x / (resolution.x - 1);
-    float v = pixel.y / (resolution.y - 1);
+   x = x * 2.0 - 1.0;
+    y = y * 2.0 - 1.0;
 
-    vec3 origin = vec3(0);
-    vec3 horizontal = vec3(aspectRatio * 2, 0, 0);
-    vec3 vertical = vec3(0, 2, 0);
-    vec3 lowerLeft = origin - horizontal / 2 - vertical / 2 - vec3(0, 0, 1);
-    vec3 direction = lowerLeft + u * horizontal + v * vertical - origin;
+    vec4 clip = vec4(x, y, -1.0, 1.0);
+    vec4 view = invProjection * clip;
+
+    vec3 direction = vec3(invView * vec4(view.x, view.y, -1.0, 0.0));
+    direction = normalize(direction);
+
+    vec4 origin = invView * vec4(0.0, 0.0, 0.0, 1.0);
+    origin.xyz /= origin.w;
 
     Ray r;
 
     r.origin = origin.xyz;
+    r.direction = direction;
+
+    return r;
+}
+
+Ray createRay(in vec3 origin, in vec3 direction)
+{
+    Ray r;
+
+    r.origin = origin;
     r.direction = direction;
 
     return r;
@@ -112,23 +173,54 @@ bool hitScene(in float tMin, in float tMax, Ray ray, Scene scene, out HitRecord 
     return hasHitAnything;
 }
 
+bool scatterLambertian(in Ray ray, in HitRecord rec, out Ray scattered, out vec3 attenuation)
+{
+    vec3 newDirection = rec.position + rec.normal + randomInUnitVector(state);
+    scattered = createRay(rec.position, normalize(newDirection - rec.position));
+    attenuation = vec3(1.0,0.78,0.37);
+    return true;
+}
 
 vec3 trace(in Ray ray, in Scene scene){
     HitRecord rec;
-    if(hitScene(0.001, 100000.0,ray,scene,rec)) {
-    
-        return 0.5 * (rec.normal + vec3(1.0));
+    Ray newRay = ray;
+    vec3 attenuation = vec3(0.0);
+    vec3 color = vec3(1.0);
+    int depth = 0;
 
+    while (depth < 50) {
+
+        if (hitScene(0.01, 1000.0, newRay, scene, rec)) {
+            Ray scattered;
+            if (scatterLambertian(newRay, rec, scattered,attenuation)) {
+
+                color *= attenuation;
+                newRay = scattered;
+            } else {
+
+                color*=vec3(0.0);
+                break;
+            }
+        } else {
+
+            vec3 unitDir = normalize(ray.direction);
+            float t = 0.5 * (unitDir.y + 1.0);
+            vec3 skyColor = vec3(0.3, 0.8, 1.0);
+            color *= (1.0 - t) * vec3(1.0) + t * skyColor;
+            break;
+        }
+
+        depth++;
     }
-    vec3 unitDir = normalize(ray.direction);
-    float t = 0.5 * (unitDir.y + 1.0);
-    vec3 skyColor = vec3(0.3,0.8,1.0);
-    return (1.0 - t) * vec3(1.0) + t * skyColor;
+    if (depth < 50) return color;
+    else return vec3(0.0);
 
 }
 
 void main() {
     ivec2 pixelCoord = ivec2(gl_GlobalInvocationID.xy);
+    state = gl_GlobalInvocationID.x * 1973 + gl_GlobalInvocationID.y * 9277  * 2699 | 1;
+
     vec3 color = vec3(0.0);
 
     Scene scene;
@@ -142,15 +234,22 @@ void main() {
 
     //actual sphere
     scene.spheres[1].radius = 0.5;
-    scene.spheres[1].position = vec3(0.0, 0.0, -1.0);
+    scene.spheres[1].position = vec3(0.0, 0.01, -1.0);
     scene.spheres[1].matID = 0;
 
     for (int i = 0; i < samples; i++)
     {
-    Ray ray = computeRay(pixelCoord.x, pixelCoord.y, gl_GlobalInvocationID.xy);
+    vec2 altCoord = vec2(pixelCoord.x + randomFloat(state), pixelCoord.y +  + randomFloat(state));
+    vec2 tCoord = altCoord / resolution;
+    Ray ray = computeRay(tCoord.x, tCoord.y, gl_GlobalInvocationID.xy);
     color += trace(ray, scene);
     }
     color /=float(samples);
-    imageStore(image, pixelCoord, vec4(color, 0.0));
+
+    vec3 previous = imageLoad(image, pixelCoord).rgb;
+
+    vec3 final = mix(color, previous, 0);
+
+    imageStore(image, pixelCoord, vec4(final, 0.0));
 
 }

@@ -144,13 +144,21 @@ void SampleWindow::PathTrace() {
 
 	glm::mat4 projection = glm::mat4(1.0f);
 	projection = glm::perspective(glm::radians(camera->getFieldOfView()), (float)width / (float)height, 0.1f, 800.0f);
+	glm::mat4 view = glm::mat4(1.0f);
+	view = glm::lookAt(camera->getCameraPosition(), camera->getCameraPosition() + camera->getCameraFront(),
+		camera->getCameraUp());
 
 	glUniformMatrix4fv(glGetUniformLocation(shaders["trace"], "invProjection"), 1, GL_FALSE, glm::value_ptr(glm::inverse(projection)));
+	glUniformMatrix4fv(glGetUniformLocation(shaders["trace"], "invView"), 1, GL_FALSE, glm::value_ptr(glm::inverse(view)));
 
 	glUniform1f(glGetUniformLocation(shaders["trace"], "aspectRatio"), float(width) / float(height));
 	glm::vec2 resolution = glm::vec2(float(width), float(height));
+
 	glUniform2fv(glGetUniformLocation(shaders["trace"], "resolution"), 1, glm::value_ptr(resolution));
 	glUniform1i(glGetUniformLocation(shaders["trace"], "samples"), samples);
+
+	glUniform1f(glGetUniformLocation(shaders["trace"], "fov"), camera->getFieldOfView());
+
 	glDispatchCompute(width, height, 1);
 	glMemoryBarrier(GL_ALL_BARRIER_BITS);
 	frameNumber++;
