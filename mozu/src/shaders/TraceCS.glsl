@@ -300,7 +300,13 @@ bool hitScene(in float tMin, in float tMax, Ray ray, Scene scene, out HitRecord 
  
     for (int i = 0; i <scene.hitNo; i++) {
         type = scene.hittables[i].type;
-      
+         if(type==0){
+         if(hitSphere(tMin,closest,ray,scene.hittables[i].sphere,tr)) {
+               hasHitAnything = true;
+               closest = tr.t;
+               hr = tr;
+        }
+         }
          if(type==1){
          if(hitXYRect(ray,scene.hittables[i].rect,tMin,closest, tr)) {
                hasHitAnything = true;
@@ -469,8 +475,8 @@ void main() {
     state = gl_GlobalInvocationID.x * 1973 + gl_GlobalInvocationID.y * 9277+uint(frameNo)  * 2699 | 1;
 
     Scene scene;
-    scene.hitNo=15;
-    scene.matNo=15;
+    scene.hitNo=18;
+    scene.matNo=18;
 
     //materials
     scene.materials[0].type = LAMBERTIAN;
@@ -485,7 +491,7 @@ void main() {
 
     scene.materials[3].type = METALLIC;
     scene.materials[3].albedo = vec3(0.66,0.41,0.51);
-    scene.materials[3].metal.roughness = 0.8;
+    scene.materials[3].metal.roughness = 0.9;
 
     scene.materials[4].type = DIELECTRIC;
     scene.materials[4].albedo = vec3(0.1, 0.1, 0.1);
@@ -513,40 +519,40 @@ void main() {
     scene.materials[10].emissive.emitted = vec3(0.93, 0.61, 0.69);
 
     //groud
-    scene.hittables[0].type = 0;
-    scene.hittables[0].sphere.radius = 100;
-    scene.hittables[0].sphere.position = vec3(0.0, -100.5, -2.0);
-    scene.hittables[0].sphere.matID = 1;
-    scene.hitIDs[0] = 0;
+    scene.hittables[0].type =0;
+    scene.hittables[0].sphere.radius = 3;
+    scene.hittables[0].sphere.position = vec3(45.0, 2.8, 10.0);
+    scene.hittables[0].sphere.matID = 5;
+    scene.hitIDs[1] = 0;
 
     //actual spheres
     scene.hittables[1].type =0;
-    scene.hittables[1].sphere.radius = 5.5;
-    scene.hittables[1].sphere.position = vec3(0.0, 20.01, -60.0);
-    scene.hittables[1].sphere.matID = 0;
+    scene.hittables[1].sphere.radius = 6;
+    scene.hittables[1].sphere.position = vec3(45.0, 5.2, 40.0);
+    scene.hittables[1].sphere.matID = 4;
     scene.hitIDs[1] = 0;
 
     scene.hittables[2].type =0;
-    scene.hittables[2].sphere.radius = 2;
-    scene.hittables[2].sphere.position = vec3(0.0, 1.4, 2.0);
-    scene.hittables[2].sphere.matID = 2;
+    scene.hittables[2].sphere.radius = 6;
+    scene.hittables[2].sphere.position = vec3(30.0, 5.2, 40.0);
+    scene.hittables[2].sphere.matID = 4;
     scene.hitIDs[2] = 0;
 
     scene.hittables[3].type =0;
-    scene.hittables[3].sphere.radius = 1;
-    scene.hittables[3].sphere.position = vec3(4.0, 0.3, 2.0);
+    scene.hittables[3].sphere.radius = 3;
+    scene.hittables[3].sphere.position = vec3(25.0, 2.7, 20.0);
     scene.hittables[3].sphere.matID = 3;
     scene.hitIDs[3] = 0;
 
     scene.hittables[4].type = 0;
-    scene.hittables[4].sphere.radius = 0.8;
-    scene.hittables[4].sphere.position = vec3(6.0, 0.0, 2.0);
-    scene.hittables[4].sphere.matID = 4;
+    scene.hittables[4].sphere.radius = 10;
+    scene.hittables[4].sphere.position = vec3(15.0, 9.7, 45.0);
+    scene.hittables[4].sphere.matID = 2;
     scene.hitIDs[4] = 0;
 
     //cornell rects
     scene.hittables[5].type =3;
-    scene.hittables[5].rect.box = vec4(0, 55.5, 0, 55.5);
+    scene.hittables[5].rect.box = vec4(0, 56, 0, 55.5);
     scene.hittables[5].rect.k = 55.5;
     scene.hittables[5].rect.matID = 5;
     scene.hitIDs[5] = 1;
@@ -575,7 +581,7 @@ void main() {
     scene.hittables[9].rect.matID = 6;
     scene.hitIDs[9] = 1;
 
-    //light
+    //emissive
     scene.hittables[10].type = 2;
     scene.hittables[10].rect.box = vec4(0, 56, 10, 12);
     scene.hittables[10].rect.k = 53.4;
@@ -593,6 +599,23 @@ void main() {
     scene.hittables[12].rect.k = 53.4;
     scene.hittables[12].rect.matID = 10;
 
+    scene.hittables[13].type =0;
+    scene.hittables[13].sphere.radius = 3;
+    scene.hittables[13].sphere.position = vec3(15.0, 3.2, 30.0);
+    scene.hittables[13].sphere.matID = 10;
+    scene.hitIDs[1] = 0;
+
+    scene.hittables[14].type =0;
+    scene.hittables[14].sphere.radius = 3;
+    scene.hittables[14].sphere.position = vec3(15.0, 3.2, 20.0);
+    scene.hittables[14].sphere.matID = 9;
+    scene.hitIDs[1] = 0;
+
+    scene.hittables[15].type =0;
+    scene.hittables[15].sphere.radius = 3;
+    scene.hittables[15].sphere.position = vec3(15.0, 3.2, 10.0);
+    scene.hittables[15].sphere.matID = 8;
+    scene.hitIDs[1] = 0;
     vec3 color = vec3(0.0);
 
     for (int i = 0; i < samples; i++)
