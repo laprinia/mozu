@@ -20,6 +20,7 @@ uint state = 0;
 #define LAMBERTIAN 0
 #define METALLIC 1
 #define DIELECTRIC 2
+#define EMISSIVE 3
 #define SPHERE 0
 #define XYRECT 1
 #define XZRECT 2
@@ -87,12 +88,18 @@ struct Dielectric
     float roughness;
 };
 
+struct Emissive
+{
+    vec3 emitted;
+};
+
 struct Material
 {
     int type;
     vec3 albedo;
     Metal metal;
     Dielectric dielectric;
+    Emissive emissive;
 };
 
 struct Sphere
@@ -125,10 +132,10 @@ struct Scene
 {
     int matNo;
     int hitNo;
-    Hittable hittables[10];
-    Material materials[10];
+    Hittable hittables[20];
+    Material materials[20];
     int typeIDs[10];
-    int hitIDs[10];
+    int hitIDs[20];
 };
 
 
@@ -380,12 +387,18 @@ bool scatterDielectric(in Ray ray, HitRecord hr, Material material, out Ray scat
 
     return true;
 }
+bool scatterEmissive(in Ray ray, HitRecord hr, Material material, out Ray scattered, out vec3 attenuation) {
+
+    return false;
+}
+
 
 vec3 trace(in Ray ray, in Scene scene){
     HitRecord hr;
     Ray newRay = ray;
     vec3 attenuation = vec3(0.0);
     vec3 color = vec3(1.0);
+    vec3 emitted = vec3(0.0);
     int depth = 0;
 
     while (depth < maxDepth) {
@@ -427,6 +440,14 @@ vec3 trace(in Ray ray, in Scene scene){
                     break;
                 }
             }
+            else if(scene.materials[hr.matID].type==EMISSIVE) {
+            
+                if (!scatterEmissive(newRay, hr,scene.materials[hr.matID], scattered,attenuation)) {
+
+                    color *= scene.materials[hr.matID].emissive.emitted;
+                    break;
+                } 
+            }
         } else {
 
             vec3 unitDir = normalize(ray.direction);
@@ -438,7 +459,7 @@ vec3 trace(in Ray ray, in Scene scene){
 
         depth++;
     }
-    if (depth < maxDepth) return color;
+    if (depth < maxDepth) return +color;
     else return vec3(0.0);
 
 }
@@ -448,8 +469,8 @@ void main() {
     state = gl_GlobalInvocationID.x * 1973 + gl_GlobalInvocationID.y * 9277+uint(frameNo)  * 2699 | 1;
 
     Scene scene;
-    scene.hitNo=10;
-    scene.matNo=8;
+    scene.hitNo=15;
+    scene.matNo=15;
 
     //materials
     scene.materials[0].type = LAMBERTIAN;
@@ -481,8 +502,18 @@ void main() {
     scene.materials[7].type = LAMBERTIAN;
     scene.materials[7].albedo = vec3(0.93,0.29,0.93);
 
+    //light
+    scene.materials[8].type = EMISSIVE;
+    scene.materials[8].emissive.emitted = vec3(0.61, 0.93, 0.85);
+
+    scene.materials[9].type = EMISSIVE;
+    scene.materials[9].emissive.emitted = vec3(0.93, 0.92, 0.61);
+
+    scene.materials[10].type = EMISSIVE;
+    scene.materials[10].emissive.emitted = vec3(0.93, 0.61, 0.69);
+
     //groud
-    scene.hittables[0].type =0;
+    scene.hittables[0].type = 0;
     scene.hittables[0].sphere.radius = 100;
     scene.hittables[0].sphere.position = vec3(0.0, -100.5, -2.0);
     scene.hittables[0].sphere.matID = 1;
@@ -543,6 +574,24 @@ void main() {
     scene.hittables[9].rect.k = 55.5;
     scene.hittables[9].rect.matID = 6;
     scene.hitIDs[9] = 1;
+
+    //light
+    scene.hittables[10].type = 2;
+    scene.hittables[10].rect.box = vec4(0, 56, 10, 12);
+    scene.hittables[10].rect.k = 53.4;
+    scene.hittables[10].rect.matID = 8;
+    scene.hitIDs[10] = 1;
+
+    scene.hittables[11].type = 2;
+    scene.hittables[11].rect.box = vec4(0, 56, 25, 27);
+    scene.hittables[11].rect.k = 53.4;
+    scene.hittables[11].rect.matID = 9;
+    scene.hitIDs[11] = 1;
+
+    scene.hittables[12].type = 2;
+    scene.hittables[12].rect.box = vec4(0, 56, 40, 42);
+    scene.hittables[12].rect.k = 53.4;
+    scene.hittables[12].rect.matID = 10;
 
     vec3 color = vec3(0.0);
 
