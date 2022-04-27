@@ -22,6 +22,8 @@ uint state = 0;
 #define DIELECTRIC 2
 #define SPHERE 0
 #define XYRECT 1
+#define XZRECT 2
+#define YZRECT 3
 
 uint random(inout uint state)
 {
@@ -106,7 +108,7 @@ vec3 minimum;
 vec3 maximum;
 };
 
-struct XYRect
+struct Rect
 {
     vec4 box;
     float k;
@@ -116,7 +118,7 @@ struct XYRect
 struct Hittable {
 int type;
 Sphere sphere;
-XYRect xyRect;
+Rect rect;
 };
 
 struct Scene
@@ -130,8 +132,7 @@ struct Scene
 };
 
 
-bool refract(in vec3 v, in vec3 n, in float etaiOverEtat, out vec3 refracted)
-{
+bool refract(in vec3 v, in vec3 n, in float etaiOverEtat, out vec3 refracted) {
     vec3 uv = normalize(v);
     float dt = dot(uv, n);
     float discriminant = 1.0 - etaiOverEtat * etaiOverEtat * (1 - dt * dt);
@@ -184,39 +185,62 @@ Ray createRay(in vec3 origin, in vec3 direction)
     return r;
 }
 
-bool hitBoundBox(in Ray r, in AABBBox bound, in float tMin, in float tMax ) {
 
-    for (int a = 0; a < 3; a++) {
-                float t0 = min((bound.minimum[a] - r.origin[a]) / r.direction[a],
-                               (bound.maximum[a] - r.origin[a]) / r.direction[a]);
-                float t1 = max((bound.minimum[a] - r.origin[a]) / r.direction[a],
-                               (bound.maximum[a] - r.origin[a]) / r.direction[a]);
-                tMin = max(t0, tMin);
-                tMax = min(t1, tMax);
-                if (tMax <= tMin)
-                    return false;
-            }
-            return true;
-
-}
-
-bool hitXYRect( in Ray r,in XYRect rect, in float tMin, in float tMax,out HitRecord hr) {
-
-    AABBBox bound;
-    bound.minimum = vec3(rect.box.x,rect.box.z, rect.k-0.0001);
-    bound.maximum = vec3(rect.box.y, rect.box.w,rect.k+0.0001);
+bool hitXYRect( in Ray r,in Rect rect, in float tMin, in float tMax,out HitRecord hr) {
 
     float t = (rect.k-r.origin.z) / r.direction.z;
     if (t < tMin || t > tMax) return false;
     float x = r.origin.x + t*r.direction.x;
     float y = r.origin.y + t*r.direction.y;
+
     if (x < rect.box.x || x > rect.box.y || y < rect.box.z || y > rect.box.w)
         return false;
     
 
     hr.t = t;
     vec3 outNormal = vec3(0, 0, 1);
-    hr.normal = outNormal;
+    hr.normal = dot(r.direction,outNormal)<0?outNormal:-outNormal;
+    hr.matID = rect.matID;
+    hr.position = r.origin + r.direction * hr.t;
+
+    return true;
+
+}
+
+bool hitXZRect( in Ray r,in Rect rect, in float tMin, in float tMax,out HitRecord hr) {
+
+
+    float t = (rect.k-r.origin.y) / r.direction.y;
+    if (t < tMin || t > tMax) return false;
+    float x = r.origin.x + t*r.direction.x;
+    float z = r.origin.z + t*r.direction.z;
+    if (x < rect.box.x || x > rect.box.y || z < rect.box.z || z > rect.box.w)
+        return false;
+    
+
+    hr.t = t;
+    vec3 outNormal = vec3(0, 1, 0);
+    hr.normal = dot(r.direction,outNormal)<0?outNormal:-outNormal;
+    hr.matID = rect.matID;
+    hr.position = r.origin + r.direction * hr.t;
+
+    return true;
+
+}
+
+bool hitYZRect( in Ray r,in Rect rect, in float tMin, in float tMax,out HitRecord hr) {
+
+    float t = (rect.k-r.origin.x) / r.direction.x;
+    if (t < tMin || t > tMax) return false;
+    float y = r.origin.y + t*r.direction.y;
+    float z = r.origin.z + t*r.direction.z;
+    if (y < rect.box.x || y > rect.box.y || z < rect.box.z || z > rect.box.w)
+        return false;
+    
+
+    hr.t = t;
+    vec3 outNormal = vec3(1, 0, 0);
+    hr.normal = dot(r.direction,outNormal)<0?outNormal:-outNormal;
     hr.matID = rect.matID;
     hr.position = r.origin + r.direction * hr.t;
 
@@ -264,28 +288,35 @@ bool hitScene(in float tMin, in float tMax, Ray ray, Scene scene, out HitRecord 
     HitRecord tr;
     float closest = tMax;
     bool hasHitAnything = false;
+    bool hasHitSphere = false;
     int type;
  
     for (int i = 0; i <scene.hitNo; i++) {
         type = scene.hittables[i].type;
-        if(type==0) {
-        if (hitSphere(tMin, closest, ray, scene.hittables[i].sphere, tr)) {
-               hasHitAnything = true;
-               closest = tr.t;
-               hr = tr;
-        }
-        }
+      
          if(type==1){
-         if(hitXYRect(ray,scene.hittables[i].xyRect,tMin,tMax, tr)) {
+         if(hitXYRect(ray,scene.hittables[i].rect,tMin,closest, tr)) {
                hasHitAnything = true;
                closest = tr.t;
                hr = tr;
         }
-       
+        }
+        if(type==2){
+         if(hitXZRect(ray,scene.hittables[i].rect,tMin,closest, tr)) {
+               hasHitAnything = true;
+               closest = tr.t;
+               hr = tr;
+        }
+        }
+        if(type==3){
+         if(hitYZRect(ray,scene.hittables[i].rect,tMin,closest, tr)) {
+               hasHitAnything = true;
+               closest = tr.t;
+               hr = tr;
+        }
         }
     }
 
-   
     return hasHitAnything;
 }
 
@@ -417,8 +448,8 @@ void main() {
     state = gl_GlobalInvocationID.x * 1973 + gl_GlobalInvocationID.y * 9277+uint(frameNo)  * 2699 | 1;
 
     Scene scene;
-    scene.hitNo=6;
-    scene.matNo=5;
+    scene.hitNo=10;
+    scene.matNo=8;
 
     //materials
     scene.materials[0].type = LAMBERTIAN;
@@ -439,6 +470,17 @@ void main() {
     scene.materials[4].albedo = vec3(0.1, 0.1, 0.1);
     scene.materials[4].dielectric.refractIDX = 1.51714;
 
+    //cornell
+
+    scene.materials[5].type = LAMBERTIAN;
+    scene.materials[5].albedo = vec3(0.35,0.95,0.36);
+
+    scene.materials[6].type = LAMBERTIAN;
+    scene.materials[6].albedo = vec3(0.88,0.88,0.88);
+
+    scene.materials[7].type = LAMBERTIAN;
+    scene.materials[7].albedo = vec3(0.93,0.29,0.93);
+
     //groud
     scene.hittables[0].type =0;
     scene.hittables[0].sphere.radius = 100;
@@ -448,8 +490,8 @@ void main() {
 
     //actual spheres
     scene.hittables[1].type =0;
-    scene.hittables[1].sphere.radius = 0.5;
-    scene.hittables[1].sphere.position = vec3(0.0, 0.01, -1.0);
+    scene.hittables[1].sphere.radius = 5.5;
+    scene.hittables[1].sphere.position = vec3(0.0, 20.01, -60.0);
     scene.hittables[1].sphere.matID = 0;
     scene.hitIDs[1] = 0;
 
@@ -471,12 +513,36 @@ void main() {
     scene.hittables[4].sphere.matID = 4;
     scene.hitIDs[4] = 0;
 
-    //rects
-    scene.hittables[5].type =1;
-    scene.hittables[5].xyRect.box = vec4(3,5,1,3);
-    scene.hittables[5].xyRect.k = -1;
-    scene.hittables[5].xyRect.matID = 3;
+    //cornell rects
+    scene.hittables[5].type =3;
+    scene.hittables[5].rect.box = vec4(0, 55.5, 0, 55.5);
+    scene.hittables[5].rect.k = 55.5;
+    scene.hittables[5].rect.matID = 5;
     scene.hitIDs[5] = 1;
+
+    scene.hittables[6].type =3;
+    scene.hittables[6].rect.box = vec4(0, 55.5, 0, 55.5);
+    scene.hittables[6].rect.k = 0;
+    scene.hittables[6].rect.matID = 7;
+    scene.hitIDs[6] = 1;
+
+    scene.hittables[7].type = 2;
+    scene.hittables[7].rect.box = vec4(0, 55.5, 0, 55.5);
+    scene.hittables[7].rect.k = 0;
+    scene.hittables[7].rect.matID = 6;
+    scene.hitIDs[7] = 1;
+
+    scene.hittables[8].type = 2;
+    scene.hittables[8].rect.box = vec4(0, 55.5, 0, 55.5);
+    scene.hittables[8].rect.k = 55.5;
+    scene.hittables[8].rect.matID = 6;
+    scene.hitIDs[8] = 1;
+
+    scene.hittables[9].type = 1;
+    scene.hittables[9].rect.box = vec4(0, 55.5, 0, 55.5);
+    scene.hittables[9].rect.k = 55.5;
+    scene.hittables[9].rect.matID = 6;
+    scene.hitIDs[9] = 1;
 
     vec3 color = vec3(0.0);
 

@@ -36,6 +36,9 @@ OpenGL ray tracer based on the "Ray Tracing in One Weekend series".
 ![framework screenshot](mozu/screens/6.png "Refraction & reflection on a dielectric surface")
 >Using Schlick's polynomial aproximation we can determine if rays must pe reflected instead of refracted, giving the final result.
 
+#### Cornell Box
+![framework screenshot](mozu/screens/7.png "Cornell box")
+>Added axis-aligned rectangles to make the Cornell box.
 ### 📚Resources:
 
 [Ray Tracing in One Weekend](https://raytracing.github.io/)
