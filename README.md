@@ -39,6 +39,15 @@ OpenGL ray tracer based on the "Ray Tracing in One Weekend series".
 #### Cornell Box
 ![framework screenshot](mozu/screens/7.png "Cornell box")
 >Added axis-aligned rectangles to make the Cornell box.
+
+#### Emissive Material
+
+![framework screenshot](mozu/screens/8.png "Emissive Materials")
+>To make things more realistic, I added an emissive material for some ceiling lights & spheres. Rays hitting an emissive surface won't scatter so they retain their true albedo color output.
+
+#### Scene Layout
+![framework screenshot](mozu/screens/9.png "Scene Layout")
+>👌
 ### 📚Resources:
 
 [Ray Tracing in One Weekend](https://raytracing.github.io/)
