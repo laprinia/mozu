@@ -15,6 +15,7 @@ double SampleWindow::lastMouseY = 0.0f;
 double SampleWindow::yaw = -90.0f;
 double SampleWindow::pitch = 0.0f;
 float SampleWindow::mouseSensitivity = 0.1f;
+float SampleWindow::lightExposure = 1.0f;
 
 int SampleWindow::samples = 1;
 int SampleWindow::maxDepth = 50;
@@ -173,6 +174,7 @@ void SampleWindow::RenderPathResult() {
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUseProgram(shaders["post"]);
+	glUniform1f(glGetUniformLocation(shaders["post"], "lightExposure"), lightExposure);
 	glBindTexture(GL_TEXTURE_2D, computeTexture);
 	glBindVertexArray(quadVAO);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

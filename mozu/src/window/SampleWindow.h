@@ -38,6 +38,7 @@ private:
 	static float cameraSpeed;
 	static float deltaTime;
 	static float lastFrame;
+	static float lightExposure;
 	unsigned int* fbID;
 	unsigned int* bufferTexture;
 	int frameNumber = 0;
