@@ -518,29 +518,28 @@ void main() {
     scene.materials[10].type = EMISSIVE;
     scene.materials[10].emissive.emitted = vec3(0.93, 0.61, 0.69);
 
-    //groud
+    //actual spheres
     scene.hittables[0].type =0;
     scene.hittables[0].sphere.radius = 3;
-    scene.hittables[0].sphere.position = vec3(45.0, 2.8, 10.0);
+    scene.hittables[0].sphere.position = vec3(45.0, 3.0, 10.0);
     scene.hittables[0].sphere.matID = 5;
     scene.hitIDs[1] = 0;
 
-    //actual spheres
     scene.hittables[1].type =0;
     scene.hittables[1].sphere.radius = 6;
-    scene.hittables[1].sphere.position = vec3(45.0, 5.2, 40.0);
+    scene.hittables[1].sphere.position = vec3(45.0, 6.0, 40.0);
     scene.hittables[1].sphere.matID = 4;
     scene.hitIDs[1] = 0;
 
     scene.hittables[2].type =0;
     scene.hittables[2].sphere.radius = 6;
-    scene.hittables[2].sphere.position = vec3(30.0, 5.2, 40.0);
+    scene.hittables[2].sphere.position = vec3(30.0, 6.0, 40.0);
     scene.hittables[2].sphere.matID = 4;
     scene.hitIDs[2] = 0;
 
     scene.hittables[3].type =0;
     scene.hittables[3].sphere.radius = 3;
-    scene.hittables[3].sphere.position = vec3(25.0, 2.7, 20.0);
+    scene.hittables[3].sphere.position = vec3(25.0, 3.0, 20.0);
     scene.hittables[3].sphere.matID = 3;
     scene.hitIDs[3] = 0;
 
@@ -552,7 +551,7 @@ void main() {
 
     //cornell rects
     scene.hittables[5].type =3;
-    scene.hittables[5].rect.box = vec4(0, 56, 0, 55.5);
+    scene.hittables[5].rect.box = vec4(0, 55.5, 0, 55.5);
     scene.hittables[5].rect.k = 55.5;
     scene.hittables[5].rect.matID = 5;
     scene.hitIDs[5] = 1;
@@ -599,19 +598,19 @@ void main() {
     scene.hittables[12].rect.k = 53.4;
     scene.hittables[12].rect.matID = 10;
 
-    scene.hittables[13].type =0;
+    scene.hittables[13].type = 0;
     scene.hittables[13].sphere.radius = 3;
     scene.hittables[13].sphere.position = vec3(15.0, 3.2, 30.0);
     scene.hittables[13].sphere.matID = 10;
     scene.hitIDs[1] = 0;
 
-    scene.hittables[14].type =0;
+    scene.hittables[14].type = 0;
     scene.hittables[14].sphere.radius = 3;
     scene.hittables[14].sphere.position = vec3(15.0, 3.2, 20.0);
     scene.hittables[14].sphere.matID = 9;
     scene.hitIDs[1] = 0;
 
-    scene.hittables[15].type =0;
+    scene.hittables[15].type = 0;
     scene.hittables[15].sphere.radius = 3;
     scene.hittables[15].sphere.position = vec3(15.0, 3.2, 10.0);
     scene.hittables[15].sphere.matID = 8;
