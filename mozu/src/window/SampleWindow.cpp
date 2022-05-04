@@ -15,7 +15,7 @@ double SampleWindow::lastMouseY = 0.0f;
 double SampleWindow::yaw = -90.0f;
 double SampleWindow::pitch = 0.0f;
 float SampleWindow::mouseSensitivity = 0.1f;
-float SampleWindow::lightExposure = 1.0f;
+float SampleWindow::lightExposure = 0.5f;
 
 int SampleWindow::samples = 1;
 int SampleWindow::maxDepth = 50;

@@ -510,13 +510,13 @@ void main() {
 
     //light
     scene.materials[8].type = EMISSIVE;
-    scene.materials[8].emissive.emitted = vec3(0.61, 0.93, 0.85);
+    scene.materials[8].emissive.emitted = vec3(1.61, 3.93, 1.85);
 
     scene.materials[9].type = EMISSIVE;
-    scene.materials[9].emissive.emitted = vec3(0.93, 0.92, 0.61);
+    scene.materials[9].emissive.emitted = vec3(3.93, 3.92, 1.61);
 
     scene.materials[10].type = EMISSIVE;
-    scene.materials[10].emissive.emitted = vec3(0.93, 0.61, 0.69);
+    scene.materials[10].emissive.emitted = vec3(3.93, 1.61, 1.69);
 
     //actual spheres
     scene.hittables[0].type =0;
