@@ -1,7 +1,7 @@
 
 ## 🏄🌒 mozu
 
-OpenGL real-time ray tracer based on the "Ray Tracing in One Weekend series".
+OpenGL real-time ray tracer using Compute Shaders. Based on the "Ray Tracing in One Weekend series".
 
 ### 📷Progress:
 
