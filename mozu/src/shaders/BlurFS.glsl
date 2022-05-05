@@ -9,7 +9,7 @@ void main()
 {
 	float blur = radius/resolution;
 	float hstep=direction.x;
-	float vstep=irection.y;
+	float vstep=direction.y;
 
 	vec4 sum = texture2D(THtexture, vec2( uv.x - 4.0*blur*hstep , uv.y - 4.0*blur*vstep ))* 0.0162162162;
 	sum += texture2D(THtexture, vec2( uv.x - 3.0*blur*hstep , uv.y - 3.0*blur*vstep ))* 0.0540540541;

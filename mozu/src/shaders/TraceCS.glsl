@@ -458,8 +458,8 @@ vec3 trace(in Ray ray, in Scene scene){
 
             vec3 unitDir = normalize(ray.direction);
             float t = 0.5 * (unitDir.y + 1.0);
-            vec3 skyColor = vec3(0.3, 0.8, 1.0);
-            color *= (1.0 - t) * vec3(1.0) + t * skyColor;
+            vec3 skyColor = vec3(0.3, 0.3, 1.0);
+            color *= (1.0 - t) * vec3(0.7) + t * skyColor;
             break;
         }
 
