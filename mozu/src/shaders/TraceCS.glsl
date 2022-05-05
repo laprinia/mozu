@@ -1,6 +1,6 @@
 #version 460 core
 layout (local_size_x = 1, local_size_y = 1) in;
-layout (binding = 0, rgba32f) uniform  image2D image;
+layout (binding = 0, rgba32f) uniform image2D image;
 const int samplesPerPixel = 2;
 uniform mat4 invProjection;
 uniform mat4 invView;
@@ -467,7 +467,6 @@ vec3 trace(in Ray ray, in Scene scene){
     }
     if (depth < maxDepth) return +color;
     else return vec3(0.0);
-
 }
 
 void main() {
@@ -510,13 +509,13 @@ void main() {
 
     //light
     scene.materials[8].type = EMISSIVE;
-    scene.materials[8].emissive.emitted = vec3(1.61, 3.93, 1.85);
+    scene.materials[8].emissive.emitted = vec3(1.61, 4.93, 1.85);
 
     scene.materials[9].type = EMISSIVE;
-    scene.materials[9].emissive.emitted = vec3(3.93, 3.92, 1.61);
+    scene.materials[9].emissive.emitted = vec3(4.93, 4.92, 1.61);
 
     scene.materials[10].type = EMISSIVE;
-    scene.materials[10].emissive.emitted = vec3(3.93, 1.61, 1.69);
+    scene.materials[10].emissive.emitted = vec3(4.93, 1.61, 1.69);
 
     //actual spheres
     scene.hittables[0].type =0;

@@ -186,8 +186,12 @@
   <ItemGroup>
     <None Include="src\shaders\BaseFS.glsl" />
     <None Include="src\shaders\BaseVS.glsl" />
+    <None Include="src\shaders\BlurFS.glsl" />
+    <None Include="src\shaders\BlurVS.glsl" />
     <None Include="src\shaders\PostFS.glsl" />
     <None Include="src\shaders\PostVS.glsl" />
+    <None Include="src\shaders\ThreshFS.glsl" />
+    <None Include="src\shaders\ThreshVS.glsl" />
     <None Include="src\shaders\TraceCS.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -111,5 +111,9 @@
     <None Include="src\shaders\PostFS.glsl" />
     <None Include="src\shaders\PostVS.glsl" />
     <None Include="src\shaders\TraceCS.glsl" />
+    <None Include="src\shaders\ThreshVS.glsl" />
+    <None Include="src\shaders\ThreshFS.glsl" />
+    <None Include="src\shaders\BlurVS.glsl" />
+    <None Include="src\shaders\BlurFS.glsl" />
   </ItemGroup>
 </Project>

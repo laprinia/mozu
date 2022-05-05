@@ -28,6 +28,14 @@ private:
 	std::unordered_map<std::string, GLuint> shaders;
 	static Camera* camera;
 	unsigned int computeTexture;
+
+	unsigned int thresholdTexture;
+	unsigned int blurTexture;
+	unsigned int bloomTexture;
+	unsigned int computeFBO;
+	unsigned int blurFBO;
+	unsigned int threshFBO;
+	unsigned int bloomFBO;
 	unsigned int quadVAO;
 	static bool hasCameraMoved;
 	static bool hasTriggeredMovement;
@@ -46,11 +54,15 @@ private:
 	static bool hasGUI;
 	static int samples;
 	static int maxDepth;
+	static bool hasBloom;
+	static float threshold, strength, radius;
 	void Init();
 	void Update();
 	void GUIUpdate();
 	void PathTrace();
-	void RenderPathResult();
+	void RenderFinalResult();
+	void RenderThreshResult();
+	void RenderBlurResult();
 	void AddShaders();
 
 public:

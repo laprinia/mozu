@@ -19,6 +19,11 @@ float SampleWindow::lightExposure = 0.5f;
 
 int SampleWindow::samples = 1;
 int SampleWindow::maxDepth = 50;
+bool SampleWindow::hasBloom = false;
+float SampleWindow::threshold = 0.7;
+float SampleWindow::strength = 0.5;
+float SampleWindow::radius = 5.0;
+
 
 SampleWindow::SampleWindow(unsigned int width, unsigned int height, const std::string& windowTitle)
 {
@@ -93,16 +98,69 @@ void SampleWindow::Init()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
+	glGenFramebuffers(1, &computeFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, computeFBO);
 	glGenTextures(1, &computeTexture);
 	glBindTexture(GL_TEXTURE_2D, computeTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, computeTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
-	glBindImageTexture(0, computeTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+
+	unsigned int rboDepth;
+	glGenRenderbuffers(1, &rboDepth);
+	glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "Framebuffer not complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+	glGenFramebuffers(1, &threshFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, threshFBO);
+	glGenTextures(1, &thresholdTexture);
+	glBindTexture(GL_TEXTURE_2D, thresholdTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, thresholdTexture, 0);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "Framebuffer not complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glGenFramebuffers(1, &blurFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, blurFBO);
+	glGenTextures(1, &blurTexture);
+	glBindTexture(GL_TEXTURE_2D, blurTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture, 0);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "Framebuffer not complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glGenFramebuffers(1, &bloomFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO);
+	glGenTextures(1, &bloomTexture);
+	glBindTexture(GL_TEXTURE_2D, bloomTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bloomTexture, 0);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "Framebuffer not complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	SampleWindow::AddShaders();
 }
@@ -115,7 +173,9 @@ void SampleWindow::Update()
 	GUIUpdate();
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	SampleWindow::PathTrace();
-	SampleWindow::RenderPathResult();
+	SampleWindow::RenderThreshResult();
+	SampleWindow::RenderBlurResult();
+	SampleWindow::RenderFinalResult();
 	hasCameraMoved = false;
 	hasTriggeredMovement = false;
 	GUIManager::DrawData();
@@ -129,7 +189,7 @@ void SampleWindow::GUIUpdate() {
 	ImGui::NewFrame();
 	if (hasGUI)
 	{
-		GUIManager::DrawSampleData(&samples, &maxDepth);
+		GUIManager::DrawSampleData(&samples, &maxDepth, &hasBloom, &threshold, &strength, &radius);
 	}
 
 	ImGui::EndFrame();
@@ -137,6 +197,7 @@ void SampleWindow::GUIUpdate() {
 }
 
 void SampleWindow::PathTrace() {
+	glBindFramebuffer(GL_FRAMEBUFFER, computeFBO);
 	if (hasCameraMoved) frameNumber = 0;
 
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -163,22 +224,83 @@ void SampleWindow::PathTrace() {
 	glUniform1i(glGetUniformLocation(shaders["trace"], "samples"), samples);
 	glUniform1i(glGetUniformLocation(shaders["trace"], "maxDepth"), maxDepth);
 
+
+
+	glBindImageTexture(0, computeTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+
 	glDispatchCompute(width, height, 1);
 	glMemoryBarrier(GL_ALL_BARRIER_BITS);
 	frameNumber++;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void SampleWindow::RenderThreshResult() {
+
+	glBindFramebuffer(GL_FRAMEBUFFER, threshFBO);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glUseProgram(shaders["thresh"]);
+	glUniform1f(glGetUniformLocation(shaders["thresh"], "threshold"), threshold);
+	glUniform1f(glGetUniformLocation(shaders["thresh"], "strength"), strength);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, computeTexture);
+	glUniform1i(glGetUniformLocation(shaders["thresh"], "RTtexture"), 0);
+	glBindVertexArray(quadVAO);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 }
 
-void SampleWindow::RenderPathResult() {
+void SampleWindow::RenderBlurResult() {
+
+	glBindFramebuffer(GL_FRAMEBUFFER, blurFBO);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glUseProgram(shaders["blur"]);
+	glUniform1f(glGetUniformLocation(shaders["blur"], "resolution"), width);
+	glUniform1f(glGetUniformLocation(shaders["blur"], "radius"), radius);
+	glUniform2f(glGetUniformLocation(shaders["blur"], "direction"), 1.0, 0.0);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, thresholdTexture);
+	glBindVertexArray(quadVAO);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glUniform1f(glGetUniformLocation(shaders["blur"], "resolution"), height);
+	glUniform1f(glGetUniformLocation(shaders["blur"], "radius"), radius);
+	glUniform2f(glGetUniformLocation(shaders["blur"], "direction"), 0.0, 1.0);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, blurTexture);
+	glBindVertexArray(quadVAO);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+}
+void SampleWindow::RenderFinalResult() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUseProgram(shaders["post"]);
 	glUniform1f(glGetUniformLocation(shaders["post"], "lightExposure"), lightExposure);
+	glUniform1ui(glGetUniformLocation(shaders["post"], "bloom"), hasBloom);
+
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, computeTexture);
+
+	glActiveTexture(GL_TEXTURE0 + 1);
+	glBindTexture(GL_TEXTURE_2D, bloomTexture);
+
 	glBindVertexArray(quadVAO);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 	GUIManager::DrawData();
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void SampleWindow::AddShaders()
@@ -186,6 +308,8 @@ void SampleWindow::AddShaders()
 	shaders["base"] = ShaderManager::AddBaseShader("Base");
 	shaders["post"] = ShaderManager::AddBaseShader("Post");
 	shaders["trace"] = ShaderManager::AddComputeShader("Trace");
+	shaders["thresh"] = ShaderManager::AddBaseShader("Thresh");
+	shaders["blur"] = ShaderManager::AddBaseShader("Blur");
 }
 
 int SampleWindow::GetWindowHeight()

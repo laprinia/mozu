@@ -36,11 +36,15 @@ void GUIManager::DrawData()
 
 }
 
-void GUIManager::DrawSampleData(int* samples, int* maxDepth)
+void GUIManager::DrawSampleData(int* samples, int* maxDepth, bool* hasBloom, float* threshold, float* strenght, float* radius)
 {
 	ImGui::Begin("mozu");
 	ImGui::DragInt("Samples per pixel", samples, 4.0f, 1, 200);
 	ImGui::DragInt("Max Depth", maxDepth, 10.0f, 5, 200);
+	ImGui::Checkbox("Bloom Effect", hasBloom);
+	ImGui::DragFloat("Bloom Threshold", threshold, 0.1f, *threshold, 10.0);
+	ImGui::DragFloat("Bloom Strength", strenght, 1.0f, *strenght, 40.0);
+	ImGui::DragFloat("Bloom Radius", radius, 1.0f, *radius, 40.0);
 	ImGui::End();
 }
 
