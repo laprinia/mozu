@@ -1,7 +1,7 @@
 
 ## 🏄🌒 mozu
 
-OpenGL ray tracer based on the "Ray Tracing in One Weekend series".
+OpenGL real-time ray tracer based on the "Ray Tracing in One Weekend series".
 
 ### 📷Progress:
 
@@ -52,6 +52,12 @@ OpenGL ray tracer based on the "Ray Tracing in One Weekend series".
 #### Adding HDR & Bloom
 ![framework screenshot](mozu/screens/10.png "Post Processing Result")
 > On the Post Processing layer, I added HDR, so the emissive material pops out more. I also added Bloom, which basically renders our lights as blurred (using Gaussian Blur), and adds the result on top of the base color.
+
+### 🎥Video:
+
+https://user-images.githubusercontent.com/51471463/166912693-68e48790-9b11-47f7-87da-3dccb1fc8c83.mp4
+
+
 ### 📚Resources:
 
 [Ray Tracing in One Weekend](https://raytracing.github.io/)
