@@ -358,7 +358,6 @@ bool scatterDielectric(in Ray ray, HitRecord hr, Material material, out Ray scat
     attenuation = vec3(1.0);
     vec3 outNormal;
     float reflectProb;
-    attenuation = vec3(1.0);
     float cosTheta;
     float etaiOverEtat;
 
@@ -370,7 +369,7 @@ bool scatterDielectric(in Ray ray, HitRecord hr, Material material, out Ray scat
 
     } else {
         outNormal = hr.normal;
-        etaiOverEtat = 1 / material.dielectric.refractIDX;
+        etaiOverEtat = 1.0 / material.dielectric.refractIDX;
         cosTheta = -dot(ray.direction, hr.normal) / length(ray.direction);
     }
 
@@ -386,7 +385,6 @@ bool scatterDielectric(in Ray ray, HitRecord hr, Material material, out Ray scat
 
     } else {
 
-        refract(unitDir, outNormal, etaiOverEtat, refracted);
         scattered = createRay(hr.position, normalize(refracted));
 
     }
@@ -438,7 +436,8 @@ vec3 trace(in Ray ray, in Scene scene){
             
                 if (scatterDielectric(newRay, hr,scene.materials[hr.matID], scattered,attenuation)) {
 
-                    color *= attenuation;
+                    //color *= attenuation;
+                    color *= (vec3(0.3)*attenuation) + (vec3(0.7)*scene.materials[hr.matID].albedo);
                     newRay = scattered;
                 } else {
 
@@ -474,7 +473,7 @@ void main() {
     state = gl_GlobalInvocationID.x * 1973 + gl_GlobalInvocationID.y * 9277+uint(frameNo)  * 2699 | 1;
 
     Scene scene;
-    scene.hitNo=18;
+    scene.hitNo=20;
     scene.matNo=18;
 
     //materials
@@ -485,21 +484,21 @@ void main() {
     scene.materials[1].albedo = vec3(0.35,0.32,0.27);
 
     scene.materials[2].type = METALLIC;
-    scene.materials[2].albedo = vec3(0.37,0.32,0.63);
+    scene.materials[2].albedo = vec3(0.97,0.92,0.93);
     scene.materials[2].metal.roughness = 0.3;
 
     scene.materials[3].type = METALLIC;
-    scene.materials[3].albedo = vec3(0.66,0.41,0.51);
+    scene.materials[3].albedo = vec3(0.78, 0.13, 0.13);
     scene.materials[3].metal.roughness = 0.9;
 
     scene.materials[4].type = DIELECTRIC;
-    scene.materials[4].albedo = vec3(0.1, 0.1, 0.1);
-    scene.materials[4].dielectric.refractIDX = 1.51714;
+    scene.materials[4].albedo = vec3(1.0, 0.1, 0.1);
+    scene.materials[4].dielectric.refractIDX = 1.33714;
 
     //cornell
 
     scene.materials[5].type = LAMBERTIAN;
-    scene.materials[5].albedo = vec3(0.35,0.95,0.36);
+    scene.materials[5].albedo = vec3(0.03, 0.69, 1.00);
 
     scene.materials[6].type = LAMBERTIAN;
     scene.materials[6].albedo = vec3(0.88,0.88,0.88);
@@ -508,39 +507,52 @@ void main() {
     scene.materials[7].albedo = vec3(0.93,0.29,0.93);
 
     //light
+    float eV = 3.5;
     scene.materials[8].type = EMISSIVE;
-    scene.materials[8].emissive.emitted = vec3(1.61, 4.93, 1.85);
+    scene.materials[8].emissive.emitted = vec3(0.27*eV, 0.53*eV, 1.0*eV);
 
     scene.materials[9].type = EMISSIVE;
-    scene.materials[9].emissive.emitted = vec3(4.93, 4.92, 1.61);
+    scene.materials[9].emissive.emitted =vec3(0.76*eV, 0.95*eV, 0.34*eV);
 
     scene.materials[10].type = EMISSIVE;
-    scene.materials[10].emissive.emitted = vec3(4.93, 1.61, 1.69);
+    scene.materials[10].emissive.emitted = vec3(0.87*eV, 0.36*eV, 0.72*eV);
+
+    //another dielectric
+
+    scene.materials[11].type = DIELECTRIC;
+    scene.materials[11].albedo = vec3(0.39, 0.50, 0.94);
+    scene.materials[11].dielectric.refractIDX = 1.33714;
+
+    //another dielectric
+    
+    scene.materials[12].type = DIELECTRIC;
+    scene.materials[12].albedo = vec3(0.9, 0.9, 0.97);
+    scene.materials[12].dielectric.refractIDX = 1.03714;
 
     //actual spheres
-    scene.hittables[0].type =0;
+    scene.hittables[0].type = 0;
     scene.hittables[0].sphere.radius = 3;
     scene.hittables[0].sphere.position = vec3(45.0, 3.0, 10.0);
     scene.hittables[0].sphere.matID = 5;
     scene.hitIDs[1] = 0;
 
-    scene.hittables[1].type =0;
+    scene.hittables[1].type = 0;
     scene.hittables[1].sphere.radius = 6;
     scene.hittables[1].sphere.position = vec3(45.0, 6.0, 40.0);
     scene.hittables[1].sphere.matID = 4;
     scene.hitIDs[1] = 0;
 
-    scene.hittables[2].type =0;
+    scene.hittables[2].type = 0;
     scene.hittables[2].sphere.radius = 6;
     scene.hittables[2].sphere.position = vec3(30.0, 6.0, 40.0);
-    scene.hittables[2].sphere.matID = 4;
+    scene.hittables[2].sphere.matID = 11;
     scene.hitIDs[2] = 0;
 
-    scene.hittables[3].type =0;
-    scene.hittables[3].sphere.radius = 3;
-    scene.hittables[3].sphere.position = vec3(25.0, 3.0, 20.0);
-    scene.hittables[3].sphere.matID = 3;
-    scene.hitIDs[3] = 0;
+    //scene.hittables[3].type = 0;
+    //scene.hittables[3].sphere.radius = 3;
+    //scene.hittables[3].sphere.position = vec3(25.0, 3.0, 20.0);
+    //scene.hittables[3].sphere.matID = 3;
+    //scene.hitIDs[3] = 0;
 
     scene.hittables[4].type = 0;
     scene.hittables[4].sphere.radius = 10;
@@ -549,7 +561,7 @@ void main() {
     scene.hitIDs[4] = 0;
 
     //cornell rects
-    scene.hittables[5].type =3;
+    scene.hittables[5].type = 3;
     scene.hittables[5].rect.box = vec4(0, 55.5, 0, 55.5);
     scene.hittables[5].rect.k = 55.5;
     scene.hittables[5].rect.matID = 5;
@@ -601,20 +613,40 @@ void main() {
     scene.hittables[13].sphere.radius = 3;
     scene.hittables[13].sphere.position = vec3(15.0, 3.2, 30.0);
     scene.hittables[13].sphere.matID = 10;
-    scene.hitIDs[1] = 0;
+    scene.hitIDs[13] = 0;
 
     scene.hittables[14].type = 0;
     scene.hittables[14].sphere.radius = 3;
     scene.hittables[14].sphere.position = vec3(15.0, 3.2, 20.0);
     scene.hittables[14].sphere.matID = 9;
-    scene.hitIDs[1] = 0;
+    scene.hitIDs[14] = 0;
 
     scene.hittables[15].type = 0;
     scene.hittables[15].sphere.radius = 3;
     scene.hittables[15].sphere.position = vec3(15.0, 3.2, 10.0);
     scene.hittables[15].sphere.matID = 8;
-    scene.hitIDs[1] = 0;
+    scene.hitIDs[15] = 0;
     vec3 color = vec3(0.0);
+
+    //dielectrics
+
+    scene.hittables[16].type = 0;
+    scene.hittables[16].sphere.radius = 2;
+    scene.hittables[16].sphere.position = vec3(25.0, 2.0, 20.0);
+    scene.hittables[16].sphere.matID = 12;
+    scene.hitIDs[16] = 0;
+
+    scene.hittables[17].type = 0;
+    scene.hittables[17].sphere.radius = 2;
+    scene.hittables[17].sphere.position = vec3(30.0, 2.0, 20.0);
+    scene.hittables[17].sphere.matID = 12;
+    scene.hitIDs[17] = 0;
+
+    scene.hittables[18].type = 0;
+    scene.hittables[18].sphere.radius = 2;
+    scene.hittables[18].sphere.position = vec3(35.0, 2.0, 20.0);
+    scene.hittables[18].sphere.matID = 12;
+    scene.hitIDs[18] = 0;
 
     for (int i = 0; i < samples; i++)
     {

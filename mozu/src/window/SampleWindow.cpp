@@ -97,7 +97,7 @@ void SampleWindow::Init()
 	glGenBuffers(1, &EBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
+	
 	glGenFramebuffers(1, &computeFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, computeFBO);
 	glGenTextures(1, &computeTexture);
@@ -107,7 +107,7 @@ void SampleWindow::Init()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
+	
 	unsigned int rboDepth;
 	glGenRenderbuffers(1, &rboDepth);
 	glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
@@ -189,7 +189,7 @@ void SampleWindow::GUIUpdate() {
 	ImGui::NewFrame();
 	if (hasGUI)
 	{
-		GUIManager::DrawSampleData(&samples, &maxDepth, &hasBloom, &threshold, &strength, &radius);
+		GUIManager::DrawSampleData(&samples, &maxDepth, &hasBloom,&threshold,&strength,&radius);
 	}
 
 	ImGui::EndFrame();
@@ -224,8 +224,8 @@ void SampleWindow::PathTrace() {
 	glUniform1i(glGetUniformLocation(shaders["trace"], "samples"), samples);
 	glUniform1i(glGetUniformLocation(shaders["trace"], "maxDepth"), maxDepth);
 
-
-
+	
+	
 	glBindImageTexture(0, computeTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
 	glDispatchCompute(width, height, 1);
@@ -294,7 +294,7 @@ void SampleWindow::RenderFinalResult() {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, computeTexture);
 
-	glActiveTexture(GL_TEXTURE0 + 1);
+	glActiveTexture(GL_TEXTURE0+1);
 	glBindTexture(GL_TEXTURE_2D, bloomTexture);
 
 	glBindVertexArray(quadVAO);
