@@ -57,7 +57,7 @@ OpenGL real-time ray tracer using Compute Shaders. Based on the "Ray Tracing in 
 
 https://user-images.githubusercontent.com/51471463/166912693-68e48790-9b11-47f7-87da-3dccb1fc8c83.mp4
 
-### More Renders
+### Final Renders
 
 ![Screenshot 2023-01-17 192449](https://user-images.githubusercontent.com/51471463/212982600-8c67b247-cc3d-474b-a999-d74879d1edbc.png)
 
