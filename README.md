@@ -63,7 +63,10 @@ https://user-images.githubusercontent.com/51471463/166912693-68e48790-9b11-47f7-
 
 ![Screenshot 2023-01-17 193157](https://user-images.githubusercontent.com/51471463/212982639-bc29bab3-2c88-4e45-8581-a3da4c36a5b2.png)
 
-![Screenshot 2023-01-17 191943](https://user-images.githubusercontent.com/51471463/212982688-35bc00e8-6d85-4690-8f39-e46756f284ea.png)
+![Screenshot 2023-01-17 192449](https://user-images.githubusercontent.com/51471463/236852336-6c98419d-b3d0-4247-bbec-21a2603d7b12.png)
+
+![Screenshot 2023-01-17 192257](https://user-images.githubusercontent.com/51471463/236852411-a4ea6c70-dfe6-4e9a-9e6c-1f4fdb6dda13.png)
+
 
 ### 📚Resources:
 
